@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Copyright (c) Microsoft Corporation
 # All rights reserved.
 #
@@ -15,46 +17,46 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import argparse
 import logging
 import os
 import sys
 
-#pylint: disable=wrong-import-position
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
-from plugins.plugin_utils import plugin_init, PluginHelper
-from plugins.teamwise_storage.storage_command_generator import StorageCommandGenerator
-#pylint: enable=wrong-import-position
+import yaml
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from common.utils import init_logger, render_string_with_secrets  #pylint: disable=wrong-import-position
 
 LOGGER = logging.getLogger(__name__)
 
 
+def _output_user_command(user_command, output_file):
+    with open(output_file, "w+") as f:
+        f.write(user_command)
+
+
 def main():
-    '''
-    Teamwise plugin is deprecated. Keep this piece of code since we may reuse them to
-    support user defined storage.
-    '''
+    parser = argparse.ArgumentParser()
 
-    LOGGER.warning("This plugin is deprecated, will ignore this plugin")
-    return
+    parser.add_argument("secret_file", help="file which contains secret info")
+    parser.add_argument("output_file", help="output file name")
+    args = parser.parse_args()
 
-    #pylint: disable=unreachable
-    LOGGER.info("Preparing storage runtime plugin commands")
-    [plugin_config, pre_script, _] = plugin_init()
-    parameters = plugin_config.get("parameters", "")
+    logging.info("Starting to render user command")
+    if not os.path.isfile(args.secret_file):
+        secrets = None
+    else:
+        with open(args.secret_file) as f:
+            secrets = yaml.safe_load(f.read())
 
-    try:
-        command_generator = StorageCommandGenerator()
-    except Exception:  #pylint: disable=broad-except
-        LOGGER.exception("Failed to generate storage commands")
-        sys.exit(1)
-    pre_script_commands = command_generator.generate_plugin_commands(
-        parameters)
-
-    PluginHelper(plugin_config).inject_commands(pre_script_commands,
-                                                pre_script)
-    LOGGER.info("Storage runtime plugin perpared")
+    user_command = os.getenv("USER_CMD")
+    LOGGER.info("not rendered user command is %s", user_command)
+    rendered_user_command = render_string_with_secrets(user_command, secrets)
+    _output_user_command(rendered_user_command, args.output_file)
+    logging.info("User command already rendered and outputted to %s",
+                 args.output_file)
 
 
 if __name__ == "__main__":
+    init_logger()
     main()

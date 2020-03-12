@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) Microsoft Corporation
 # All rights reserved.
 #
@@ -15,19 +16,16 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-cluster-type:
-  - k8s
+set -o errexit
+set -o nounset
+set -o pipefail
 
-prerequisite:
-  - cluster-configuration
-  - frameworkcontroller
-  - rest-server
-
-template-list:
-  - runtime-exit-spec.yaml
-
-start-script: start.sh
-stop-script: stop.sh
-delete-script: delete.sh
-refresh-script: refresh.sh
-upgraded-script: upgraded.sh
+TENSORFLOW_VERSION=$(python -c 'import tensorflow as tf; print(tf.__version__)')
+MAJOR_VERSION=${TENSORFLOW_VERSION:0:1}
+if [[ "$MAJOR_VERSION" = "1" ]]; then
+    tensorboard --logdir={{ logdir }} --port={{ port }} &
+elif [[ "$MAJOR_VERSION" = "2" ]]; then
+    tensorboard --logdir={{ logdir }} --port={{ port }} --bind_all &
+else
+    echo "Tensorflow version is ${TENSORFLOW_VERSION}, not support"
+fi
