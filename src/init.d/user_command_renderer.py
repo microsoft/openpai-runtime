@@ -31,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _output_user_command(user_command, output_file):
-    with open(output_file, "w+") as f:
+    with open(output_file, "a+") as f:
         f.write(user_command)
 
 
