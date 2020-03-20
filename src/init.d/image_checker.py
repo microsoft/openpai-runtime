@@ -171,7 +171,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
 
     def _get_normalized_image_info(self) -> dict:
         uri = self._image_uri
-        if not self._is_image_use_default_domain():
+        use_default_domain = self._is_image_use_default_domain()
+        if not use_default_domain:
             assert "/" in self._image_uri
             index = self._image_uri.find("/")
             uri = self._image_uri[index + 1:]
@@ -186,7 +187,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 self._image_uri))
 
         repo_chunks = uri_chunks[0].split("/")
-        if len(repo_chunks) == 1:
+        if len(repo_chunks) == 1 and use_default_domain:
             return {"repo": "library/{}".format(repository), "tag": tag}
         return {"repo": repository, "tag": tag}
 
