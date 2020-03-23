@@ -192,7 +192,13 @@ class TestImageChecker(unittest.TestCase):
             "expect_image_info": {
                 "repo": "pytorch/pytorch",
                 "tag": "1.3-cuda10.1-cudnn7-runtime"
-            }
+            },
+        }, {
+            "image_uri": "test.azurecr.io/test-base:4dc825cebeam2",
+            "expect_image_info": {
+                "repo": "test-base",
+                "tag": "4dc825cebeam2"
+            },
         }]
 
         for test_case in test_cases:
