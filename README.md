@@ -1,6 +1,6 @@
 # Microsoft OpenPAI Runtime
 
-![Docker Pulls](https://img.shields.io/docker/pulls/openpai/kube-runtime)
+![Docker Pulls](https://img.shields.io/docker/pulls/openpairuntime/openpai-runtime) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/microsoft/openpai-runtime/CI/master)
 
 **Runtime component for deep learning workload** 
 
