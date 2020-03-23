@@ -18,6 +18,9 @@ Another major feature of OpenPAI runtime is the introduction of "PAI runtime plu
 5. SSH plugin: used to support ssh access to job container
 6. Cmd plugin: used to run customized commands before/after job
 
+## How to build
+Please run `docker build -f ./build/openpai-runtime.dockerfile .` to build openpai-runtime docker image
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
