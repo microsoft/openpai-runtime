@@ -34,14 +34,14 @@ RUN /bin/bash ubuntu_build.sh package_cache_info ubuntu18.04
 
 # Package Cache Data Layer Ends
 
-FROM golang:1.12.6-alpine as builder
+FROM golang:1.13.8-alpine as builder
 
-ENV PROJECT_DIR=${GOPATH}/src/github.com/microsoft/runtime
+ENV PROJECT_DIR=/src/
 ENV INSTALL_DIR=/opt/kube-runtime
 
 RUN apk update && apk add --no-cache bash && \
   mkdir -p ${PROJECT_DIR} ${INSTALL_DIR}
-COPY GOPATH/src/github.com/microsoft/runtime/ ${PROJECT_DIR}
+COPY go/ ${PROJECT_DIR}
 RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
   mv ${PROJECT_DIR}/dist/runtime/ ${INSTALL_DIR}
 

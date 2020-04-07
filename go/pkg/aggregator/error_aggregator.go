@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/microsoft/runtime/pkg/logger"
+	"github.com/microsoft/openpai-runtime/pkg/logger"
 	"gopkg.in/yaml.v2"
 )
 
