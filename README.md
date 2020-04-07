@@ -1,6 +1,6 @@
 # Microsoft OpenPAI Runtime
 
-![Docker Pulls](https://img.shields.io/docker/pulls/openpairuntime/openpai-runtime) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/microsoft/openpai-runtime/CI/master)
+[![Docker Pulls](https://img.shields.io/docker/pulls/openpairuntime/openpai-runtime)](https://hub.docker.com/repository/docker/openpairuntime/openpai-runtime) [![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/microsoft/openpai-runtime/CI/master)](https://github.com/microsoft/openpai-runtime/actions?query=event%3Apush+branch%3Amaster)
 
 **Runtime component for deep learning workload** 
 
