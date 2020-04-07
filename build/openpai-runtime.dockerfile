@@ -34,7 +34,7 @@ RUN /bin/bash ubuntu_build.sh package_cache_info ubuntu18.04
 
 # Package Cache Data Layer Ends
 
-FROM golang:1.12.6-alpine as builder
+FROM golang:1.13.8-alpine as builder
 
 ENV PROJECT_DIR=/src/
 ENV INSTALL_DIR=/opt/kube-runtime
