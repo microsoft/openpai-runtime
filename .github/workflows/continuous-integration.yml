@@ -55,10 +55,10 @@ jobs:
         architecture: x64
     - name: build runtime
       run: |
-        cd src/go
+        cd go
         go build ./cmd/exithandler/main.go
     - name: Test openpai-runtime
       run: |
-        cd src/go
+        cd go
         go test -cover ./pkg/aggregator
 
