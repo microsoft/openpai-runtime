@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/microsoft/runtime/pkg/aggregator"
-	"github.com/microsoft/runtime/pkg/logger"
+	"github.com/microsoft/openpai-runtime/pkg/aggregator"
+	"github.com/microsoft/openpai-runtime/pkg/logger"
 )
 
 var log *logger.Logger

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/microsoft/runtime/pkg/logger"
+	"github.com/microsoft/openpai-runtime/pkg/logger"
 	"github.com/stretchr/testify/assert"
 )
 
