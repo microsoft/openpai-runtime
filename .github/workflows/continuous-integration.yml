@@ -37,3 +37,28 @@ jobs:
         cd test
         python -m unittest discover .
 
+  go-build:
+    name: Test openpai-runtime on go-${{ matrix.go }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: [1.13.8]
+        os: [ubuntu-16.04, ubuntu-latest]
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Go ${{ matrix.go }}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go }}
+        architecture: x64
+    - name: build runtime
+      run: |
+        cd src/go
+        go build ./cmd/exithandler/main.go
+    - name: Test openpai-runtime
+      run: |
+        cd src/go
+        go test -cover ./pkg/aggregator
+
