@@ -41,33 +41,36 @@ type runtimeErrorSpec struct {
 }
 
 type pattern struct {
-	ExitCode         *int                   `yaml:"exitCode"`
-	UserLogRegex     *string                `yaml:"userLogRegex"`
-	PlatformLogRegex *string                `yaml:"platformLogRegex"`
-	Env              map[string]interface{} `yaml:"env"`
+	ExitCode         *int     `yaml:"exitCode"`
+	UserLogRegex     *string  `yaml:"userLogRegex"`
+	PlatformLogRegex *string  `yaml:"platformLogRegex"`
+	Env              *envInfo `yaml:"env"`
 	// Can add more patterns here
 }
 
 type gpuInfo struct {
-	NvidiaEccError *string `yaml:"nvidiaEccError"`
+	NvidiaEccError *string `yaml:"nvidiaEccError,omitempty"`
 }
 
-// ErrorLogs contain the platform and user error logs
-type ErrorLogs struct {
+type envInfo struct {
+	Gpu *gpuInfo `yaml:"gpu"`
+}
+
+type errorLogs struct {
 	User     *string `yaml:"user,omitempty"`
 	Platform *string `yaml:"platform,omitempty"`
 }
 
 // RuntimeExitInfo the aggregated exit info
 type RuntimeExitInfo struct {
-	Exitcode                 int                    `yaml:"exitCode"`
-	Trigger                  *string                `yaml:"trigger,omitempty"`
-	OriginUserExitCode       int                    `yaml:"originUserExitCode"`
-	MatchedUserLogString     *string                `yaml:"matchedUserLogString,omitempty"`
-	MatchedPlatformLogString *string                `yaml:"matchedPlatformLogString,omitempty"`
-	MatchedEnvInfo           map[string]interface{} `yaml:"matchedEnvInfo,omitempty"`
-	CaughtException          *string                `yaml:"caughtException,omitempty"`
-	ErrorLogs                *ErrorLogs             `yaml:"errorLogs,omitempty"`
+	Exitcode                 int        `yaml:"exitCode"`
+	Trigger                  *string    `yaml:"trigger,omitempty"`
+	OriginUserExitCode       int        `yaml:"originUserExitCode"`
+	MatchedUserLogString     *string    `yaml:"matchedUserLogString,omitempty"`
+	MatchedPlatformLogString *string    `yaml:"matchedPlatformLogString,omitempty"`
+	MatchedEnvInfo           *envInfo   `yaml:"matchedEnvInfo,omitempty"`
+	CaughtException          *string    `yaml:"caughtException,omitempty"`
+	ErrorLogs                *errorLogs `yaml:"errorLogs,omitempty"`
 }
 
 // LogFiles point the path for userLog and platLog
@@ -81,7 +84,7 @@ type matchResult struct {
 	matchedPlatformLog *string
 	platLog            []string
 	userLog            []string
-	envInfo            map[string]interface{}
+	envInfo            *envInfo
 }
 
 // ErrorAggregator is used to generate the aggregate error message
@@ -169,7 +172,7 @@ func (a *ErrorAggregator) GenerateExitInfo(userExitCode int) (*RuntimeExitInfo, 
 			exitInfo.CaughtException = nil
 			exitInfo.MatchedEnvInfo = result.envInfo
 			if result.platLog != nil || result.userLog != nil {
-				exitInfo.ErrorLogs = new(ErrorLogs)
+				exitInfo.ErrorLogs = new(errorLogs)
 				exitInfo.ErrorLogs.Platform = ptrString(strings.Join(result.platLog, "\n"))
 				exitInfo.ErrorLogs.User = ptrString(strings.Join(result.userLog, "\n"))
 			}
@@ -180,7 +183,7 @@ func (a *ErrorAggregator) GenerateExitInfo(userExitCode int) (*RuntimeExitInfo, 
 	if !isMatch {
 		exitInfo.Exitcode = a.defaultExitCode
 		exitInfo.OriginUserExitCode = userExitCode
-		exitInfo.ErrorLogs = new(ErrorLogs)
+		exitInfo.ErrorLogs = new(errorLogs)
 		exitInfo.ErrorLogs.Platform = ptrString(strings.Join(a.extractNlinesTailLog(platformLog, a.maxRuntimeLogLines), "\n"))
 		exitInfo.ErrorLogs.User = ptrString(strings.Join(a.extractNlinesTailLog(userLog, a.maxUserLogLines), "\n"))
 	}
@@ -307,7 +310,7 @@ func (a *ErrorAggregator) getMatchedLogString(loc []int, log []byte) *string {
 }
 
 func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode int, userLog []byte,
-	platformLog []byte, envInfo map[string]interface{}) (bool, *matchResult) {
+	platformLog []byte, envInfo *envInfo) (bool, *matchResult) {
 	var result = new(matchResult)
 	var platPatternLoc, userPatternLoc []int
 	var err error
@@ -472,8 +475,8 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 	return nil, errors.New("failed to truncate the exit info")
 }
 
-func (a *ErrorAggregator) collectEnvInfo() map[string]interface{} {
-	envMap := make(map[string]interface{})
+func (a *ErrorAggregator) collectEnvInfo() *envInfo {
+	envInfo := envInfo{}
 	gpuStatus, err := a.gpuInfoCollector.collectGpuStatus()
 	if err != nil {
 		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
@@ -482,9 +485,9 @@ func (a *ErrorAggregator) collectEnvInfo() map[string]interface{} {
 		if gpuStatus.nvidaDoubleEccErrorCount >= 0 {
 			gInfo.NvidiaEccError = ptrString("double")
 		}
-		envMap["gpu"] = gInfo
+		envInfo.Gpu = gInfo
 	}
-	return envMap
+	return &envInfo
 }
 
 // SetMaxAggregateLogSize to set maxAggregateLogSize and used for test
