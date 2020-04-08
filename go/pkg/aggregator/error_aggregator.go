@@ -44,7 +44,7 @@ type pattern struct {
 	ExitCode         *int     `yaml:"exitCode"`
 	UserLogRegex     *string  `yaml:"userLogRegex"`
 	PlatformLogRegex *string  `yaml:"platformLogRegex"`
-	Env              *envInfo `yaml:"env"`
+	EnvInfo          *envInfo `yaml:"envInfo"`
 	// Can add more patterns here
 }
 
@@ -340,8 +340,8 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 				continue
 			}
 		}
-		if p.Env != nil {
-			if !reflect.DeepEqual(p.Env, envInfo) {
+		if p.EnvInfo != nil {
+			if !reflect.DeepEqual(p.EnvInfo, envInfo) {
 				continue
 			}
 		}
@@ -362,7 +362,7 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 		result.matchedPlatformLog = a.getMatchedLogString(platPatternLoc, platformLog)
 		result.platLog = platLogLines
 		result.userLog = userLogLines
-		result.envInfo = p.Env
+		result.envInfo = p.EnvInfo
 		return true, result
 	}
 	return false, nil
@@ -481,11 +481,11 @@ func (a *ErrorAggregator) collectEnvInfo() *envInfo {
 	if err != nil {
 		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
 	} else {
-		gInfo := &gpuInfo{}
+		gi := &gpuInfo{}
 		if gpuStatus.nvidaDoubleEccErrorCount >= 0 {
-			gInfo.NvidiaEccError = ptrString("double")
+			gi.NvidiaEccError = ptrString("double")
 		}
-		envInfo.Gpu = gInfo
+		envInfo.Gpu = gi
 	}
 	return &envInfo
 }
