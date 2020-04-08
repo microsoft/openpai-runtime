@@ -135,7 +135,7 @@ func TestGenerateExitInfoWithAndLogic(t *testing.T) {
 
 func TestGenerateExitWithEnvInfo(t *testing.T) {
 	mockGpuInfoCollector := new(mockGpuInfoCollector)
-	mockGpuInfoCollector.On("collectGpuStatus").Return(gpuStatus{2}, nil)
+	mockGpuInfoCollector.On("collectGpuStatus").Return(&gpuStatus{2}, nil)
 	a, _ := initAggregator("../../example/test/user.pai.all.t1", "../../example/test/runtime.pai.error.t1")
 	a.gpuInfoCollector = mockGpuInfoCollector
 	exitInfo, err := a.GenerateExitInfo(1)
