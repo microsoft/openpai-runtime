@@ -49,7 +49,7 @@ type pattern struct {
 }
 
 type gpuInfo struct {
-	EccError *string `yaml:"eccError"`
+	NvidiaEccError *string `yaml:"nvidiaEccError"`
 }
 
 // ErrorLogs contain the platform and user error logs
@@ -89,6 +89,7 @@ type ErrorAggregator struct {
 	errorSpecs          []*runtimeErrorSpec
 	logFiles            *LogFiles
 	logger              *logger.Logger
+	gpuInfoCollector    gpuInfoCollector
 	maxAggregateLogSize int
 	maxMatchLogLen      int
 	maxUserLogLines     int
@@ -472,15 +473,14 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 }
 
 func (a *ErrorAggregator) collectEnvInfo() map[string]interface{} {
-	g := newGpuInfoCollector(a.logger)
 	envMap := make(map[string]interface{})
-	gpuStatus, err := g.collectGpuStatus()
+	gpuStatus, err := a.gpuInfoCollector.collectGpuStatus()
 	if err != nil {
 		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
 	} else {
 		gInfo := &gpuInfo{}
-		if gpuStatus.doubleEccErrorCount >= 0 {
-			gInfo.EccError = ptrString("double")
+		if gpuStatus.nvidaDoubleEccErrorCount >= 0 {
+			gInfo.NvidiaEccError = ptrString("double")
 		}
 		envMap["gpu"] = gInfo
 	}
@@ -518,6 +518,7 @@ func NewErrorAggregator(l *LogFiles, logger *logger.Logger) (*ErrorAggregator, e
 	a := ErrorAggregator{
 		logFiles:            l,
 		logger:              logger,
+		gpuInfoCollector:    newGpuInfoCollector(logger),
 		maxAggregateLogSize: 4096 - len(exitInfoBeginTag) - len(exitInfoEndTag),
 		maxMatchLogLen:      2048,
 		maxUserLogLines:     15,

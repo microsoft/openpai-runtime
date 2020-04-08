@@ -25,7 +25,7 @@
 - patterns:
   - env:
       gpu:
-        eccError: double
+        nvidiaEccError: double
   containerExitCode: 16
 
 - patterns:

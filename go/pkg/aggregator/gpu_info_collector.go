@@ -28,14 +28,18 @@ import (
 )
 
 type gpuStatus struct {
-	doubleEccErrorCount uint64
+	nvidaDoubleEccErrorCount uint64
 }
 
-type gpuInfoCollector struct {
+type gpuInfoCollector interface {
+	collectGpuStatus() (*gpuStatus, error)
+}
+
+type nvidiaGpuInfoCollector struct {
 	logger *logger.Logger
 }
 
-func (g *gpuInfoCollector) collectGpuStatus() (*gpuStatus, error) {
+func (g *nvidiaGpuInfoCollector) collectGpuStatus() (*gpuStatus, error) {
 	err := nvml.Init()
 	if err != nil {
 		return nil, err
@@ -69,6 +73,7 @@ func (g *gpuInfoCollector) collectGpuStatus() (*gpuStatus, error) {
 	return &gpuStatus{doubleEccErrorCount}, nil
 }
 
-func newGpuInfoCollector(logger *logger.Logger) *gpuInfoCollector {
-	return &gpuInfoCollector{logger}
+func newGpuInfoCollector(logger *logger.Logger) gpuInfoCollector {
+	// Currently, only support nvida gpu
+	return &nvidiaGpuInfoCollector{logger}
 }
