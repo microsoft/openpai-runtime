@@ -1,3 +1,25 @@
+// MIT License
+//
+// Copyright (c) Microsoft Corporation. All rights reserved.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE
+
 package logger
 
 import (
@@ -7,13 +29,19 @@ import (
 
 // Logger used to log message
 type Logger struct {
-	errorLogger *log.Logger
-	infoLogger  *log.Logger
+	errorLogger   *log.Logger
+	warningLogger *log.Logger
+	infoLogger    *log.Logger
 }
 
 // Log info message
 func (l *Logger) Info(v ...interface{}) {
 	l.infoLogger.Println(v...)
+}
+
+// Log warning message
+func (l *Logger) Warning(v ...interface{}) {
+	l.warningLogger.Println(v...)
 }
 
 // Log error message
@@ -25,6 +53,7 @@ func (l *Logger) Error(v ...interface{}) {
 func NewLogger() *Logger {
 	logger := Logger{
 		log.New(os.Stderr, "Error:", log.Ldate|log.Ltime|log.Lshortfile),
+		log.New(os.Stderr, "Warning", log.Ldate|log.Ltime|log.Lshortfile),
 		log.New(os.Stderr, "Info:", log.Ldate|log.Ltime|log.Lshortfile),
 	}
 	return &logger

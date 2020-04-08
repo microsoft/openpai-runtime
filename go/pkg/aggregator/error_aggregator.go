@@ -1,3 +1,25 @@
+// MIT License
+//
+// Copyright (c) Microsoft Corporation. All rights reserved.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE
+
 package aggregator
 
 import (
@@ -5,6 +27,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -18,10 +41,15 @@ type runtimeErrorSpec struct {
 }
 
 type pattern struct {
-	ExitCode         *int    `yaml:"exitCode"`
-	UserLogRegex     *string `yaml:"userLogRegex"`
-	PlatformLogRegex *string `yaml:"platformLogRegex"`
+	ExitCode         *int                   `yaml:"exitCode"`
+	UserLogRegex     *string                `yaml:"userLogRegex"`
+	PlatformLogRegex *string                `yaml:"platformLogRegex"`
+	Env              map[string]interface{} `yaml:"env"`
 	// Can add more patterns here
+}
+
+type gpuInfo struct {
+	EccError *string `yaml:"eccError"`
 }
 
 // ErrorLogs contain the platform and user error logs
@@ -32,13 +60,14 @@ type ErrorLogs struct {
 
 // RuntimeExitInfo the aggregated exit info
 type RuntimeExitInfo struct {
-	Exitcode                 int        `yaml:"exitCode"`
-	Trigger                  *string    `yaml:"trigger,omitempty"`
-	OriginUserExitCode       int        `yaml:"originUserExitCode"`
-	MatchedUserLogString     *string    `yaml:"matchedUserLogString,omitempty"`
-	MatchedPlatformLogString *string    `yaml:"matchedPlatformLogString,omitempty"`
-	CaughtException          *string    `yaml:"caughtException,omitempty"`
-	ErrorLogs                *ErrorLogs `yaml:"errorLogs,omitempty"`
+	Exitcode                 int                    `yaml:"exitCode"`
+	Trigger                  *string                `yaml:"trigger,omitempty"`
+	OriginUserExitCode       int                    `yaml:"originUserExitCode"`
+	MatchedUserLogString     *string                `yaml:"matchedUserLogString,omitempty"`
+	MatchedPlatformLogString *string                `yaml:"matchedPlatformLogString,omitempty"`
+	MatchedEnvInfo           map[string]interface{} `yaml:"matchedEnvInfo,omitempty"`
+	CaughtException          *string                `yaml:"caughtException,omitempty"`
+	ErrorLogs                *ErrorLogs             `yaml:"errorLogs,omitempty"`
 }
 
 // LogFiles point the path for userLog and platLog
@@ -52,9 +81,10 @@ type matchResult struct {
 	matchedPlatformLog *string
 	platLog            []string
 	userLog            []string
+	envInfo            map[string]interface{}
 }
 
-// ErrorAggregator is used to generate the aggreagetor error message
+// ErrorAggregator is used to generate the aggregate error message
 type ErrorAggregator struct {
 	errorSpecs          []*runtimeErrorSpec
 	logFiles            *LogFiles
@@ -63,7 +93,7 @@ type ErrorAggregator struct {
 	maxMatchLogLen      int
 	maxUserLogLines     int
 	maxRuntimeLogLines  int
-	defaulExitCode      int
+	defaultExitCode     int
 	maxSearchLogSize    int64
 	aggExitInfoBegin    string
 	aggExitInfoEnd      string
@@ -126,14 +156,17 @@ func (a *ErrorAggregator) GenerateExitInfo(userExitCode int) (*RuntimeExitInfo, 
 		a.logger.Error("some error occur when getting runtime user log conent, may cause inaccurate result", err)
 	}
 
+	envInfo := a.collectEnvInfo()
+
 	for _, spec := range a.errorSpecs {
-		isMatch, result = a.matchSpecPatten(spec, userExitCode, userLog, platformLog)
+		isMatch, result = a.matchSpecPatten(spec, userExitCode, userLog, platformLog, envInfo)
 		if isMatch {
 			exitInfo.Exitcode = spec.ContainerExitCode
 			exitInfo.OriginUserExitCode = userExitCode
 			exitInfo.MatchedUserLogString = result.matchedUserLog
 			exitInfo.MatchedPlatformLogString = result.matchedPlatformLog
 			exitInfo.CaughtException = nil
+			exitInfo.MatchedEnvInfo = result.envInfo
 			if result.platLog != nil || result.userLog != nil {
 				exitInfo.ErrorLogs = new(ErrorLogs)
 				exitInfo.ErrorLogs.Platform = ptrString(strings.Join(result.platLog, "\n"))
@@ -144,7 +177,7 @@ func (a *ErrorAggregator) GenerateExitInfo(userExitCode int) (*RuntimeExitInfo, 
 	}
 
 	if !isMatch {
-		exitInfo.Exitcode = a.defaulExitCode
+		exitInfo.Exitcode = a.defaultExitCode
 		exitInfo.OriginUserExitCode = userExitCode
 		exitInfo.ErrorLogs = new(ErrorLogs)
 		exitInfo.ErrorLogs.Platform = ptrString(strings.Join(a.extractNlinesTailLog(platformLog, a.maxRuntimeLogLines), "\n"))
@@ -272,7 +305,8 @@ func (a *ErrorAggregator) getMatchedLogString(loc []int, log []byte) *string {
 	return nil
 }
 
-func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode int, userLog []byte, platformLog []byte) (bool, *matchResult) {
+func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode int, userLog []byte,
+	platformLog []byte, envInfo map[string]interface{}) (bool, *matchResult) {
 	var result = new(matchResult)
 	var platPatternLoc, userPatternLoc []int
 	var err error
@@ -302,10 +336,15 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 				continue
 			}
 		}
+		if p.Env != nil {
+			if !reflect.DeepEqual(p.Env, envInfo) {
+				continue
+			}
+		}
 
 		// we can get matched pattern here
-		var paltLogLines, userLogLines []string
-		paltLogLines, err = a.extractMatchLog(platPatternLoc, platformLog, a.maxRuntimeLogLines)
+		var platLogLines, userLogLines []string
+		platLogLines, err = a.extractMatchLog(platPatternLoc, platformLog, a.maxRuntimeLogLines)
 		if err != nil {
 			a.logger.Error("extract platLog error", err)
 		}
@@ -317,8 +356,9 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 
 		result.matchedUserLog = a.getMatchedLogString(userPatternLoc, userLog)
 		result.matchedPlatformLog = a.getMatchedLogString(platPatternLoc, platformLog)
-		result.platLog = paltLogLines
+		result.platLog = platLogLines
 		result.userLog = userLogLines
+		result.envInfo = p.Env
 		return true, result
 	}
 	return false, nil
@@ -428,7 +468,23 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		}
 	}
 
-	return nil, errors.New("Failde to truncate the exit info")
+	return nil, errors.New("failed to truncate the exit info")
+}
+
+func (a *ErrorAggregator) collectEnvInfo() map[string]interface{} {
+	g := newGpuInfoCollector(a.logger)
+	envMap := make(map[string]interface{})
+	gpuStatus, err := g.collectGpuStatus()
+	if err != nil {
+		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
+	} else {
+		gInfo := &gpuInfo{}
+		if gpuStatus.doubleEccErrorCount >= 0 {
+			gInfo.EccError = ptrString("double")
+		}
+		envMap["gpu"] = gInfo
+	}
+	return envMap
 }
 
 // SetMaxAggregateLogSize to set maxAggregateLogSize and used for test
@@ -449,7 +505,7 @@ func (a *ErrorAggregator) ExitInfoSuffix() string {
 // NewErrorAggregator create an error aggregator
 func NewErrorAggregator(l *LogFiles, logger *logger.Logger) (*ErrorAggregator, error) {
 	if len(l.UserLog) == 0 || len(l.RuntimeErrorLog) == 0 {
-		return nil, errors.New("invalide log file")
+		return nil, errors.New("invalid log file")
 	}
 
 	if logger == nil {
@@ -466,7 +522,7 @@ func NewErrorAggregator(l *LogFiles, logger *logger.Logger) (*ErrorAggregator, e
 		maxMatchLogLen:      2048,
 		maxUserLogLines:     15,
 		maxRuntimeLogLines:  10,
-		defaulExitCode:      255,
+		defaultExitCode:     255,
 		maxSearchLogSize:    10 * 1024 * 1024, // 10MB
 		aggExitInfoBegin:    exitInfoBeginTag,
 		aggExitInfoEnd:      exitInfoEndTag,

@@ -23,6 +23,12 @@
   containerExitCode: 15
 
 - patterns:
+  - env:
+      gpu:
+        eccError: double
+  containerExitCode: 16
+
+- patterns:
   - exitCode: 137
   containerExitCode: 137
 
