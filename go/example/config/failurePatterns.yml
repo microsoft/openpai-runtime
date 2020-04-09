@@ -23,9 +23,8 @@
   containerExitCode: 15
 
 - patterns:
-  - envInfo:
-      gpu:
-        nvidiaEccError: double
+  - gpuInfo:
+      nvidiaDoubleEccError: true
   containerExitCode: 16
 
 - patterns:

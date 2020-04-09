@@ -44,16 +44,12 @@ type pattern struct {
 	ExitCode         *int     `yaml:"exitCode"`
 	UserLogRegex     *string  `yaml:"userLogRegex"`
 	PlatformLogRegex *string  `yaml:"platformLogRegex"`
-	EnvInfo          *envInfo `yaml:"envInfo"`
+	GpuInfo          *gpuInfo `yaml:"gpuInfo"`
 	// Can add more patterns here
 }
 
 type gpuInfo struct {
-	NvidiaEccError *string `yaml:"nvidiaEccError,omitempty"`
-}
-
-type envInfo struct {
-	Gpu *gpuInfo `yaml:"gpu"`
+	NvidiaDoubleEccError bool `yaml:"nvidiaDoubleEccError,omitempty"`
 }
 
 type errorLogs struct {
@@ -68,7 +64,7 @@ type RuntimeExitInfo struct {
 	OriginUserExitCode       int        `yaml:"originUserExitCode"`
 	MatchedUserLogString     *string    `yaml:"matchedUserLogString,omitempty"`
 	MatchedPlatformLogString *string    `yaml:"matchedPlatformLogString,omitempty"`
-	MatchedEnvInfo           *envInfo   `yaml:"matchedEnvInfo,omitempty"`
+	MatchedGpuInfo           *gpuInfo   `yaml:"matchedGpuInfo,omitempty"`
 	CaughtException          *string    `yaml:"caughtException,omitempty"`
 	ErrorLogs                *errorLogs `yaml:"errorLogs,omitempty"`
 }
@@ -84,7 +80,7 @@ type matchResult struct {
 	matchedPlatformLog *string
 	platLog            []string
 	userLog            []string
-	envInfo            *envInfo
+	gpuInfo            *gpuInfo
 }
 
 // ErrorAggregator is used to generate the aggregate error message
@@ -160,17 +156,17 @@ func (a *ErrorAggregator) GenerateExitInfo(userExitCode int) (*RuntimeExitInfo, 
 		a.logger.Error("some error occur when getting runtime user log conent, may cause inaccurate result", err)
 	}
 
-	envInfo := a.collectEnvInfo()
+	gi := a.collectGpuInfo()
 
 	for _, spec := range a.errorSpecs {
-		isMatch, result = a.matchSpecPatten(spec, userExitCode, userLog, platformLog, envInfo)
+		isMatch, result = a.matchSpecPatten(spec, userExitCode, userLog, platformLog, gi)
 		if isMatch {
 			exitInfo.Exitcode = spec.ContainerExitCode
 			exitInfo.OriginUserExitCode = userExitCode
 			exitInfo.MatchedUserLogString = result.matchedUserLog
 			exitInfo.MatchedPlatformLogString = result.matchedPlatformLog
 			exitInfo.CaughtException = nil
-			exitInfo.MatchedEnvInfo = result.envInfo
+			exitInfo.MatchedGpuInfo = result.gpuInfo
 			if result.platLog != nil || result.userLog != nil {
 				exitInfo.ErrorLogs = new(errorLogs)
 				exitInfo.ErrorLogs.Platform = ptrString(strings.Join(result.platLog, "\n"))
@@ -310,7 +306,7 @@ func (a *ErrorAggregator) getMatchedLogString(loc []int, log []byte) *string {
 }
 
 func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode int, userLog []byte,
-	platformLog []byte, envInfo *envInfo) (bool, *matchResult) {
+	platformLog []byte, gpuInfo *gpuInfo) (bool, *matchResult) {
 	var result = new(matchResult)
 	var platPatternLoc, userPatternLoc []int
 	var err error
@@ -340,8 +336,8 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 				continue
 			}
 		}
-		if p.EnvInfo != nil {
-			if !reflect.DeepEqual(p.EnvInfo, envInfo) {
+		if p.GpuInfo != nil {
+			if !reflect.DeepEqual(p.GpuInfo, gpuInfo) {
 				continue
 			}
 		}
@@ -362,7 +358,7 @@ func (a *ErrorAggregator) matchSpecPatten(spec *runtimeErrorSpec, userExitCode i
 		result.matchedPlatformLog = a.getMatchedLogString(platPatternLoc, platformLog)
 		result.platLog = platLogLines
 		result.userLog = userLogLines
-		result.envInfo = p.EnvInfo
+		result.gpuInfo = p.GpuInfo
 		return true, result
 	}
 	return false, nil
@@ -475,19 +471,17 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 	return nil, errors.New("failed to truncate the exit info")
 }
 
-func (a *ErrorAggregator) collectEnvInfo() *envInfo {
-	envInfo := envInfo{}
+func (a *ErrorAggregator) collectGpuInfo() *gpuInfo {
+	gi := gpuInfo{}
 	gpuStatus, err := a.gpuInfoCollector.collectGpuStatus()
 	if err != nil {
 		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
 	} else {
-		gi := &gpuInfo{}
 		if gpuStatus.nvidaDoubleEccErrorCount >= 0 {
-			gi.NvidiaEccError = ptrString("double")
+			gi.NvidiaDoubleEccError = true
 		}
-		envInfo.Gpu = gi
 	}
-	return &envInfo
+	return &gi
 }
 
 // SetMaxAggregateLogSize to set maxAggregateLogSize and used for test

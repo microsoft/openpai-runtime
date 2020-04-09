@@ -141,7 +141,7 @@ func TestGenerateExitWithEnvInfo(t *testing.T) {
 	exitInfo, err := a.GenerateExitInfo(1)
 	assert.Nil(t, err)
 
-	expectedEnvInfo := &envInfo{Gpu: &gpuInfo{NvidiaEccError: ptrString("double")}}
+	expectedGpuInfo := &gpuInfo{NvidiaDoubleEccError: true}
 	assert.Equal(t, exitInfo.Exitcode, 16)
-	assert.Equal(t, exitInfo.MatchedEnvInfo, expectedEnvInfo)
+	assert.Equal(t, exitInfo.MatchedGpuInfo, expectedGpuInfo)
 }
