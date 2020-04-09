@@ -23,7 +23,13 @@
 package aggregator
 
 import (
-	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
+	"context"
+	"encoding/xml"
+	"errors"
+	"os/exec"
+	"strconv"
+	"time"
+
 	"github.com/microsoft/openpai-runtime/pkg/logger"
 )
 
@@ -39,37 +45,55 @@ type nvidiaGpuInfoCollector struct {
 	logger *logger.Logger
 }
 
+type nvidiaSmi struct {
+	XMLName xml.Name    `xml:"nvidia_smi_log"`
+	Gpus    []nvidiaGpu `xml:"gpu"`
+}
+
+type nvidiaGpu struct {
+	EccErrors nvidiaEccErrors `xml:"ecc_errors"`
+}
+
+type nvidiaEccErrors struct {
+	Volatile volatileError `xml:"volatile"`
+}
+
+type volatileError struct {
+	DoubleBitTotal string `xml:"double_bit>total"`
+}
+
 func (g *nvidiaGpuInfoCollector) collectGpuStatus() (*gpuStatus, error) {
-	err := nvml.Init()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "nvidia-smi", "-q", "-x")
+
+	out, err := cmd.Output()
 	if err != nil {
+		g.logger.Warning("failed to exec nvidia-smi")
 		return nil, err
 	}
 
-	count, err := nvml.GetDeviceCount()
+	return g.parseNvidiaSmiOuput(out)
+}
+
+func (g *nvidiaGpuInfoCollector) parseNvidiaSmiOuput(nvidiaSmiOutput []byte) (*gpuStatus, error) {
+	var nvidiaSmi nvidiaSmi
+	err := xml.Unmarshal(nvidiaSmiOutput, &nvidiaSmi)
 	if err != nil {
-		return nil, err
+		g.logger.Warning("failed to parse nvidia-smi output")
+		return nil, errors.New("nvidia-smi output is broken")
 	}
-	var doubleEccErrorCount uint64 = 0
-	for i := uint(0); i < count; i++ {
-		device, err := nvml.NewDevice(i)
+
+	var doubleEccErrorCount uint64
+	for _, gpu := range nvidiaSmi.Gpus {
+		count, err := strconv.ParseUint(gpu.EccErrors.Volatile.DoubleBitTotal, 10, 64)
 		if err != nil {
-			g.logger.Warning("failed to get device:", err)
+			// The valud can be N/A if none ecc error
+			continue
 		}
-		status, err := device.Status()
-		if err != nil {
-			g.logger.Warning("failed to get device status", err)
-		}
-		if status.Memory.ECCErrors.Device != nil {
-			doubleEccErrorCount += *status.Memory.ECCErrors.Device
-		}
-		if status.Memory.ECCErrors.L1Cache != nil {
-			doubleEccErrorCount += *status.Memory.ECCErrors.L2Cache
-		}
-		if status.Memory.ECCErrors.L2Cache != nil {
-			doubleEccErrorCount += *status.Memory.ECCErrors.L2Cache
-		}
+		doubleEccErrorCount += count
 	}
-	defer nvml.Shutdown()
 	return &gpuStatus{doubleEccErrorCount}, nil
 }
 
