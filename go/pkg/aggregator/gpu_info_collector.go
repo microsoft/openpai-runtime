@@ -89,7 +89,7 @@ func (g *nvidiaGpuInfoCollector) parseNvidiaSmiOuput(nvidiaSmiOutput []byte) (*g
 	for _, gpu := range nvidiaSmi.Gpus {
 		count, err := strconv.ParseUint(gpu.EccErrors.Volatile.DoubleBitTotal, 10, 64)
 		if err != nil {
-			// The valud can be N/A if none ecc error
+			// The value can be N/A if none ecc error
 			continue
 		}
 		doubleEccErrorCount += count

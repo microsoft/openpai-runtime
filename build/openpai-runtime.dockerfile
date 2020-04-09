@@ -39,7 +39,7 @@ FROM golang:1.13.8-alpine as builder
 ENV PROJECT_DIR=/src/
 ENV INSTALL_DIR=/opt/kube-runtime
 
-RUN apk update && apk add --no-cache bash gcc musl-dev && \
+RUN apk update && apk add --no-cache bash && \
   mkdir -p ${PROJECT_DIR} ${INSTALL_DIR}
 COPY go/ ${PROJECT_DIR}
 RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
