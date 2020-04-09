@@ -20,41 +20,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE
 
-package logger
+package aggregator
 
 import (
-	"log"
-	"os"
+	"io/ioutil"
+	"testing"
+
+	"github.com/microsoft/openpai-runtime/pkg/logger"
+	"github.com/stretchr/testify/assert"
 )
 
-// Logger used to log message
-type Logger struct {
-	errorLogger   *log.Logger
-	warningLogger *log.Logger
-	infoLogger    *log.Logger
-}
+func TestParseNvidiaSmiOutput(t *testing.T) {
+	nvidiaSmiOutput, _ := ioutil.ReadFile("../../example/test/nvidia-smi.xml")
+	g := &nvidiaGpuInfoCollector{logger.NewLogger()}
+	gs, _ := g.parseNvidiaSmiOuput(nvidiaSmiOutput)
 
-// Log info message
-func (l *Logger) Info(v ...interface{}) {
-	l.infoLogger.Println(v...)
-}
-
-// Log warning message
-func (l *Logger) Warning(v ...interface{}) {
-	l.warningLogger.Println(v...)
-}
-
-// Log error message
-func (l *Logger) Error(v ...interface{}) {
-	l.errorLogger.Println(v...)
-}
-
-// NewLogger create and init logger
-func NewLogger() *Logger {
-	logger := Logger{
-		log.New(os.Stderr, "Error:", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(os.Stderr, "Warning", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(os.Stderr, "Info:", log.Ldate|log.Ltime|log.Lshortfile),
-	}
-	return &logger
+	expectedGpuStatus := &gpuStatus{nvidaDoubleEccErrorCount: 2}
+	assert.Equal(t, gs, expectedGpuStatus)
 }

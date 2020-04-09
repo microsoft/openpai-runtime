@@ -23,6 +23,11 @@
   containerExitCode: 15
 
 - patterns:
+  - gpuInfo:
+      nvidiaDoubleEccError: true
+  containerExitCode: 16
+
+- patterns:
   - exitCode: 137
   containerExitCode: 137
 
