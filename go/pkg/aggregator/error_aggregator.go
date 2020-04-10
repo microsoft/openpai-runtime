@@ -477,7 +477,7 @@ func (a *ErrorAggregator) collectGpuInfo() *gpuInfo {
 	if err != nil {
 		a.logger.Warning("failed to collect gpu status, maybe in CPU env")
 	} else {
-		if gpuStatus.nvidaDoubleEccErrorCount >= 0 {
+		if gpuStatus.nvidaDoubleEccErrorCount > 0 {
 			gi.NvidiaDoubleEccError = true
 		}
 	}
