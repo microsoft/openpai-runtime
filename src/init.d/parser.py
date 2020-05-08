@@ -18,6 +18,7 @@
 
 import argparse
 import base64
+import hashlib
 import logging
 import gzip
 import json
@@ -28,6 +29,10 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from common.utils import init_logger  #pylint: disable=wrong-import-position
 
 LOGGER = logging.getLogger(__name__)
+
+# The port range is [20000, 40000) by default.
+# TODO: Change to using config file or ENV in future
+PORT_RANGE = {"begin_offset": 20000, "count": 20000}
 
 
 def export(k, v):
@@ -40,6 +45,13 @@ def decompress_field(field):
     data = gzip.decompress(base64.b64decode(field))
     obj = json.loads(data)
     return obj
+
+
+def generate_port_num(pod_uid, port_name, port_index, port_range,
+                      port_begin_offset):
+    raw_str = pod_uid + port_name + str(port_index)
+    return port_begin_offset + int(
+        hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) % port_range
 
 
 def generate_runtime_env(framework):  #pylint: disable=too-many-locals
@@ -72,11 +84,7 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
     taskroles = {}
     for taskrole in framework["spec"]["taskRoles"]:
         taskroles[taskrole["name"]] = {
-            "number":
-            taskrole["taskNumber"],
-            "ports":
-            json.loads(taskrole["task"]["pod"]["metadata"]["annotations"]
-                       ["rest-server/port-scheduling-spec"]),
+            "number": taskrole["taskNumber"],
         }
     LOGGER.info("task roles: %s", taskroles)
 
@@ -96,17 +104,17 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
         for task in taskrole["taskStatuses"]:
             index = task["index"]
             current_ip = task["attemptStatus"]["podHostIP"]
+            pod_uuid = task["attempStatus"]["podUID"]
 
             taskrole_instances.append("{}:{}".format(name, index))
-
-            get_port_base = lambda port_name, p=ports, i=index: int(p[
-                port_name]["start"]) + int(p[port_name]["count"]) * int(i)
 
             # export ip/port for task role, current ip maybe None for non-gang-allocation
             if current_ip:
                 export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
-                host_list.append("{}:{}".format(current_ip,
-                                                get_port_base("http")))
+                host_list.append("{}:{}".format(
+                    current_ip,
+                    generate_port_num(pod_uuid, "http", 0, PORT_RANGE["count"],
+                                      PORT_RANGE["begin_offset"])))
 
             for port in ports.keys():
                 start, count = get_port_base(port), int(ports[port]["count"])
