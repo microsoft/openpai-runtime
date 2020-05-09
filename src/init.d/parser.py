@@ -47,10 +47,15 @@ def decompress_field(field):
     return obj
 
 
-def generate_port_num(pod_uid, port_name, port_index):
-    raw_str = pod_uid + port_name + str(port_index)
-    return PORT_RANGE["begin_offset"] + int(
-        hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) % PORT_RANGE["count"]
+def generate_ports_num(pod_uuid, port_name, port_count):
+    port_list = []
+    for i in range(port_count):
+        raw_str = pod_uuid + port_name + str(i)
+        port_list.append(
+            PORT_RANGE["begin_offset"] +
+            int(hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) %
+            PORT_RANGE["count"])
+    return port_list
 
 
 def generate_runtime_env(framework):  #pylint: disable=too-many-locals
@@ -83,7 +88,11 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
     taskroles = {}
     for taskrole in framework["spec"]["taskRoles"]:
         taskroles[taskrole["name"]] = {
-            "number": taskrole["taskNumber"],
+            "number":
+            taskrole["taskNumber"],
+            "ports":
+            json.loads(taskrole["task"]["pod"]["metadata"]["annotations"]
+                       ["rest-server/port-scheduling-spec"]),
         }
     LOGGER.info("task roles: %s", taskroles)
 
@@ -104,20 +113,20 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
             index = task["index"]
             current_ip = task["attemptStatus"]["podHostIP"]
             pod_uuid = task["attempStatus"]["podUID"]
+            task_ports = {}
 
             taskrole_instances.append("{}:{}".format(name, index))
 
             # export ip/port for task role, current ip maybe None for non-gang-allocation
             if current_ip:
                 export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
-                host_list.append("{}:{}".format(
-                    current_ip,
-                    generate_port_num(pod_uuid, "http", 0)))
+                host_list.append("{}:{}".format(current_ip,
+                                                task_ports["http"][0]))
 
             for port in ports.keys():
                 count = int(ports[port]["count"])
-                current_port_str = ",".join(
-                    generate_port_num(pod_uuid, port, x) for x in range(count))
+                task_ports[port] = generate_ports_num(pod_uuid, port, count)
+                current_port_str = ",".join(task_ports[port])
                 export("PAI_PORT_LIST_{}_{}_{}".format(name, index, port),
                        current_port_str)
                 export("PAI_{}_{}_{}_PORT".format(name, index, port),
@@ -127,15 +136,14 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
             if (current_taskrole_name == name
                     and current_task_index == str(index)):
                 export("PAI_CURRENT_CONTAINER_IP", current_ip)
-                export("PAI_CURRENT_CONTAINER_PORT", generate_port_num(pod_uuid, "http", 0))
+                export("PAI_CURRENT_CONTAINER_PORT", task_ports["http"][0])
                 export("PAI_CONTAINER_HOST_IP", current_ip)
-                export("PAI_CONTAINER_HOST_PORT", generate_port_num(pod_uuid, "http", 0))
-                export("PAI_CONTAINER_SSH_PORT", generate_port_num(pod_uuid, "ssh", 0))
+                export("PAI_CONTAINER_HOST_PORT", task_ports["http"][0])
+                export("PAI_CONTAINER_SSH_PORT", task_ports["ssh"][0])
                 port_str = ""
                 for port in ports.keys():
                     count = int(ports[port]["count"])
-                    current_port_str = ",".join(
-                        generate_port_num(pod_uuid, port, x) for x in range(count) for x in range(count))
+                    current_port_str = ",".join(task_ports[port])
                     export("PAI_CONTAINER_HOST_{}_PORT_LIST".format(port),
                            current_port_str)
                     port_str += "{}:{};".format(port, current_port_str)
