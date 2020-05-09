@@ -31,7 +31,7 @@ from common.utils import init_logger  #pylint: disable=wrong-import-position
 LOGGER = logging.getLogger(__name__)
 
 # The port range is [20000, 40000) by default.
-# TODO: Change to using config file or ENV in future
+# TODO: Change to use config file or ENV in future
 PORT_RANGE = {"begin_offset": 20000, "count": 20000}
 
 
@@ -52,9 +52,9 @@ def generate_ports_num(pod_uuid, port_name, port_count):
     for i in range(port_count):
         raw_str = pod_uuid + port_name + str(i)
         port_list.append(
-            PORT_RANGE["begin_offset"] +
-            int(hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) %
-            PORT_RANGE["count"])
+            str(PORT_RANGE["begin_offset"] +
+                int(hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) %
+                PORT_RANGE["count"]))
     return port_list
 
 
@@ -112,16 +112,10 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
         for task in taskrole["taskStatuses"]:
             index = task["index"]
             current_ip = task["attemptStatus"]["podHostIP"]
-            pod_uuid = task["attempStatus"]["podUID"]
+            pod_uuid = task["attemptStatus"]["podUID"]
             task_ports = {}
 
             taskrole_instances.append("{}:{}".format(name, index))
-
-            # export ip/port for task role, current ip maybe None for non-gang-allocation
-            if current_ip:
-                export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
-                host_list.append("{}:{}".format(current_ip,
-                                                task_ports["http"][0]))
 
             for port in ports.keys():
                 count = int(ports[port]["count"])
@@ -131,6 +125,12 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
                        current_port_str)
                 export("PAI_{}_{}_{}_PORT".format(name, index, port),
                        current_port_str)
+
+            # export ip/port for task role, current ip maybe None for non-gang-allocation
+            if current_ip:
+                export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
+                host_list.append("{}:{}".format(current_ip,
+                                                task_ports["http"][0]))
 
             # export ip/port for current container
             if (current_taskrole_name == name
@@ -142,7 +142,6 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
                 export("PAI_CONTAINER_SSH_PORT", task_ports["ssh"][0])
                 port_str = ""
                 for port in ports.keys():
-                    count = int(ports[port]["count"])
                     current_port_str = ",".join(task_ports[port])
                     export("PAI_CONTAINER_HOST_{}_PORT_LIST".format(port),
                            current_port_str)

@@ -49,8 +49,12 @@ def check_port(portno):
 
 
 def check_port_list_env(port_list_env):
+    ports = {}
     for each in re.split(":|;|,", port_list_env):
         if each.isdigit():
+            if each in ports:
+                LOGGER.error("Port %s has conflict.", each)
+                sys.exit(10)
             check_port(int(each))
 
 

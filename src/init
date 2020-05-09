@@ -153,12 +153,12 @@ cp ${PAI_CONFIG_DIR}/runtime-exit-spec.yaml ${PAI_RUNTIME_DIR}
 # generate runtime env variables
 # priority=10
 CHILD_PROCESS="ENV_GENERATOR"
-python ${PAI_INIT_DIR}/parser.py genenv framework.json > ${PAI_RUNTIME_DIR}/runtime_env.sh
+python ${PAI_INIT_DIR}/framework_parser.py genenv framework.json > ${PAI_RUNTIME_DIR}/runtime_env.sh
 
 # generate jobconfig
 # priority=11
 CHILD_PROCESS="CONFIG_GENERATOR"
-python ${PAI_INIT_DIR}/parser.py genconf framework.json > ${PAI_RUNTIME_DIR}/job_config.yaml
+python ${PAI_INIT_DIR}/framework_parser.py genconf framework.json > ${PAI_RUNTIME_DIR}/job_config.yaml
 
 # Init plugins
 # priority=12
