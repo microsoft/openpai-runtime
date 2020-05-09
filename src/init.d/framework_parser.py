@@ -47,10 +47,10 @@ def decompress_field(field):
     return obj
 
 
-def generate_ports_num(pod_uuid, port_name, port_count):
+def generate_ports_num(pod_uid, port_name, port_count):
     port_list = []
     for i in range(port_count):
-        raw_str = pod_uuid + port_name + str(i)
+        raw_str = pod_uid + port_name + str(i)
         port_list.append(
             str(PORT_RANGE["begin_offset"] +
                 int(hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) %
@@ -112,14 +112,14 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
         for task in taskrole["taskStatuses"]:
             index = task["index"]
             current_ip = task["attemptStatus"]["podHostIP"]
-            pod_uuid = task["attemptStatus"]["podUID"]
+            pod_uid = task["attemptStatus"]["podUID"]
             task_ports = {}
 
             taskrole_instances.append("{}:{}".format(name, index))
 
             for port in ports.keys():
                 count = int(ports[port]["count"])
-                task_ports[port] = generate_ports_num(pod_uuid, port, count)
+                task_ports[port] = generate_ports_num(pod_uid, port, count)
                 current_port_str = ",".join(task_ports[port])
                 export("PAI_PORT_LIST_{}_{}_{}".format(name, index, port),
                        current_port_str)

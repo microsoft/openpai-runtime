@@ -55,6 +55,7 @@ def check_port_list_env(port_list_env):
             if each in ports:
                 LOGGER.error("Port %s has conflict.", each)
                 sys.exit(10)
+            ports[each] = True
             check_port(int(each))
 
 
