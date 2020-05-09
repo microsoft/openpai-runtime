@@ -48,12 +48,16 @@ def decompress_field(field):
 
 
 def generate_ports_num(pod_uid, port_name, port_count):
+    """ Random generate the port number
+
+    The algorithm is: int(md5(podUid + portName + portIndex)[:12] ,16）% 20000 + 20000
+    """
     port_list = []
     for i in range(port_count):
         raw_str = pod_uid + port_name + str(i)
         port_list.append(
             str(PORT_RANGE["begin_offset"] +
-                int(hashlib.md5(raw_str.encode("utf8")).hexdigest(), 16) %
+                int(hashlib.md5(raw_str.encode("utf8")).hexdigest()[:12], 16) %
                 PORT_RANGE["count"]))
     return port_list
 

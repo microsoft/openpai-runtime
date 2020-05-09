@@ -53,14 +53,14 @@ class TestParser(unittest.TestCase):
         runtime_env = temp_stdout.getvalue().splitlines()
 
         expect_lines = [
-            "export PAI_CONTAINER_HOST_PORT_LIST='tcp:39529,34039;ssh:34979;http:23490;'",
-            "export PAI_CONTAINER_HOST_tcp_PORT_LIST='39529,34039'",
-            "export PAI_CONTAINER_HOST_ssh_PORT_LIST='34979'",
-            "export PAI_PORT_LIST_taskrole_0_tcp='39529,34039'",
-            "export PAI_taskrole1_0_udp_PORT='29807,27475'",
-            "export PAI_taskrole1_0_mpi_PORT='33620'",
-            "export PAI_CONTAINER_HOST_PORT='23490'",
-            "export PAI_CONTAINER_SSH_PORT='34979'"
+            "export PAI_CONTAINER_HOST_PORT_LIST='tcp:28747,37250;ssh:35521;http:21504;'",
+            "export PAI_CONTAINER_HOST_tcp_PORT_LIST='28747,37250'",
+            "export PAI_CONTAINER_HOST_ssh_PORT_LIST='35521'",
+            "export PAI_PORT_LIST_taskrole_0_tcp='28747,37250'",
+            "export PAI_taskrole1_0_udp_PORT='21907,33743'",
+            "export PAI_taskrole1_0_mpi_PORT='39411'",
+            "export PAI_CONTAINER_HOST_PORT='21504'",
+            "export PAI_CONTAINER_SSH_PORT='35521'"
         ]
         for expect in expect_lines:
             self.assertIn(expect, runtime_env)
