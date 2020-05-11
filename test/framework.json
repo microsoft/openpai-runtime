@@ -39,7 +39,7 @@
               "annotations": {
                 "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
                 "hivedscheduler.microsoft.com/pod-scheduling-spec": "virtualCluster: default\npriority: 10\ngpuType: null\nreservationId: null\ngpuNumber: 1\naffinityGroup:\n  name: testuser~testuser_7c61921e/default\n  members:\n    - podNumber: 1\n      gpuNumber: 1\n    - podNumber: 1\n      gpuNumber: 1\n",
-                "rest-server/port-scheduling-spec": "{\"tcp\":{\"start\":27574,\"count\":2},\"ssh\":{\"start\":22055,\"count\":1},\"http\":{\"start\":22904,\"count\":1}}"
+                "rest-server/port-scheduling-spec": "{\"portStart\":20000,\"portEnd\":40000,\"ports\":{\"tcp\":{\"start\":27574,\"count\":2},\"ssh\":{\"start\":22055,\"count\":1},\"http\":{\"start\":22904,\"count\":1}}}"
               },
               "creationTimestamp": null,
               "labels": {
@@ -421,7 +421,7 @@
               "annotations": {
                 "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
                 "hivedscheduler.microsoft.com/pod-scheduling-spec": "virtualCluster: default\npriority: 10\ngpuType: null\nreservationId: null\ngpuNumber: 1\naffinityGroup:\n  name: testuser~testuser_7c61921e/default\n  members:\n    - podNumber: 1\n      gpuNumber: 1\n    - podNumber: 1\n      gpuNumber: 1\n",
-                "rest-server/port-scheduling-spec": "{\"udp\":{\"start\":32153,\"count\":2},\"mpi\":{\"start\":21793,\"count\":1},\"ssh\":{\"start\":32584,\"count\":1},\"http\":{\"start\":22819,\"count\":1}}"
+                "rest-server/port-scheduling-spec": "{\"portStart\":20000,\"portEnd\":40000,\"ports\":{\"udp\":{\"start\":32153,\"count\":2},\"mpi\":{\"start\":21793,\"count\":1},\"ssh\":{\"start\":32584,\"count\":1},\"http\":{\"start\":22819,\"count\":1}}}"
               },
               "creationTimestamp": null,
               "labels": {

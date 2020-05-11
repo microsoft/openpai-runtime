@@ -30,10 +30,6 @@ from common.utils import init_logger  #pylint: disable=wrong-import-position
 
 LOGGER = logging.getLogger(__name__)
 
-# The port range is [20000, 40000) by default.
-# TODO: Change to use config file or ENV in future
-PORT_RANGE = {"begin_offset": 20000, "count": 20000}
-
 
 def export(k, v):
     print("export {}='{}'".format(k, v))
@@ -47,18 +43,19 @@ def decompress_field(field):
     return obj
 
 
-def generate_ports_num(pod_uid, port_name, port_count):
+def generate_ports_num(pod_uid, port_name, port_count, port_start, port_end):
     """ Random generate the port number
 
-    The algorithm is: int(md5(podUid + portName + portIndex)[:12] ,16）% 20000 + 20000
+    The algorithm is:
+    int(md5(podUid + portName + portIndex)[:12] ,16) % (port_end - port_start) + port_start
     """
     port_list = []
     for i in range(port_count):
         raw_str = pod_uid + port_name + str(i)
         port_list.append(
-            str(PORT_RANGE["begin_offset"] +
+            str(port_start +
                 int(hashlib.md5(raw_str.encode("utf8")).hexdigest()[:12], 16) %
-                PORT_RANGE["count"]))
+                (port_end - port_start)))
     return port_list
 
 
@@ -121,9 +118,14 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
 
             taskrole_instances.append("{}:{}".format(name, index))
 
-            for port in ports.keys():
-                count = int(ports[port]["count"])
-                task_ports[port] = generate_ports_num(pod_uid, port, count)
+            port_start = ports["portStart"]
+            port_end = ports["portEnd"]
+            port_list = ports["ports"]
+
+            for port in port_list.keys():
+                count = int(port_list[port]["count"])
+                task_ports[port] = generate_ports_num(pod_uid, port, count,
+                                                      port_start, port_end)
                 current_port_str = ",".join(task_ports[port])
                 export("PAI_PORT_LIST_{}_{}_{}".format(name, index, port),
                        current_port_str)
@@ -145,7 +147,7 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
                 export("PAI_CONTAINER_HOST_PORT", task_ports["http"][0])
                 export("PAI_CONTAINER_SSH_PORT", task_ports["ssh"][0])
                 port_str = ""
-                for port in ports.keys():
+                for port in port_list.keys():
                     current_port_str = ",".join(task_ports[port])
                     export("PAI_CONTAINER_HOST_{}_PORT_LIST".format(port),
                            current_port_str)
