@@ -47,15 +47,18 @@ def generate_ports_num(pod_uid, port_name, port_count, port_start, port_end):
     """ Random generate the port number
 
     The algorithm is:
-    int(md5(podUid + portName + portIndex)[:12] ,16) % (port_end - port_start) + port_start
+    (int(md5(podUid + portName + portIndex)[0:12] ,16) +
+     int(md5(podUid + portName + portIndex)[12:24] ,16) +
+     int(md5(podUid + portName + portIndex)[24:32] ,16)) % (port_end - port_start) + port_start
     """
     port_list = []
     for i in range(port_count):
-        raw_str = pod_uid + port_name + str(i)
+        raw_str = "[{}][{}][{}]".format(pod_uid, port_name, str(i))
+        hash_str = hashlib.md5(raw_str.encode("utf8")).hexdigest()
         port_list.append(
-            str(port_start +
-                int(hashlib.md5(raw_str.encode("utf8")).hexdigest()[:12], 16) %
-                (port_end - port_start)))
+            str((int(hash_str[:12], 16) + int(hash_str[12:24], 16) +
+                 int(hash_str[24:], 16)) % (port_end - port_start) +
+                port_start))
     return port_list
 
 
