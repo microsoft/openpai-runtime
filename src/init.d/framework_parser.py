@@ -128,9 +128,9 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
             taskrole_instances.append("{}:{}".format(name, index))
 
             use_port_hash = True
-            if "ports" in ports and "portStart" in ports and "portEnd" in ports:
-                port_start = ports["portStart"]
-                port_end = ports["portEnd"]
+            if "ports" in ports and "schedulePortStart" in ports and "schedulePortEnd" in ports:
+                port_start = ports["schedulePortStart"]
+                port_end = ports["schedulePortEnd"]
                 port_list = ports["ports"]
             else:
                 # for backward compatibility
