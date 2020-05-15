@@ -43,7 +43,13 @@ def decompress_field(field):
     return obj
 
 
-def generate_ports_num(pod_uid, port_name, port_count, port_start, port_end):
+def generate_seq_ports_num(port_start, port_count, task_index):
+    base = port_start + port_count * task_index
+    return [str(port_num) for port_num in range(base, base + port_count)]
+
+
+def generate_hashed_ports_num(pod_uid, port_name, port_count, port_start,
+                              port_end):
     """ Random generate the port number
 
     The algorithm is:
@@ -121,14 +127,22 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
 
             taskrole_instances.append("{}:{}".format(name, index))
 
-            port_start = ports["portStart"]
-            port_end = ports["portEnd"]
-            port_list = ports["ports"]
+            use_port_hash = True
+            if "ports" in ports and "portStart" in ports and "portEnd" in ports:
+                port_start = ports["portStart"]
+                port_end = ports["portEnd"]
+                port_list = ports["ports"]
+            else:
+                # for backward compatibility
+                use_port_hash = False
+                port_list = ports
 
             for port in port_list.keys():
                 count = int(port_list[port]["count"])
-                task_ports[port] = generate_ports_num(pod_uid, port, count,
-                                                      port_start, port_end)
+                task_ports[port] = generate_hashed_ports_num(
+                    pod_uid, port, count, port_start,
+                    port_end) if use_port_hash else generate_seq_ports_num(
+                        port_list[port]["start"], count, index)
                 current_port_str = ",".join(task_ports[port])
                 export("PAI_PORT_LIST_{}_{}_{}".format(name, index, port),
                        current_port_str)
