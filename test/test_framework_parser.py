@@ -44,27 +44,45 @@ class TestParser(unittest.TestCase):
     def test_generate_runtime_env(self):
         os.environ["FC_TASK_INDEX"] = "0"
         os.environ["FC_TASKROLE_NAME"] = "taskrole"
-        with open("framework.json", "r") as f:
-            framework = json.load(f)
-
-        sys.stdout = temp_stdout = StringIO()
-        generate_runtime_env(framework)
-
-        runtime_env = temp_stdout.getvalue().splitlines()
-
-        expect_lines = [
-            "export PAI_CONTAINER_HOST_PORT_LIST='tcp:23652,22505;ssh:31055;http:25895;'",
-            "export PAI_CONTAINER_HOST_tcp_PORT_LIST='23652,22505'",
-            "export PAI_CONTAINER_HOST_ssh_PORT_LIST='31055'",
-            "export PAI_PORT_LIST_taskrole_0_tcp='23652,22505'",
-            "export PAI_taskrole1_0_udp_PORT='37633,27232'",
-            "export PAI_taskrole1_0_mpi_PORT='27760'",
-            "export PAI_CONTAINER_HOST_PORT='25895'",
-            "export PAI_CONTAINER_SSH_PORT='31055'"
+        test_files = [
+            "framework.json",
+            "framework_multi_instances.json",
         ]
-        for expect in expect_lines:
-            self.assertIn(expect, runtime_env)
-        sys.stdout = sys.__stdout__
+        expect_lines = [
+            [
+                "export PAI_CONTAINER_HOST_PORT_LIST='tcp:23652,22505;ssh:31055;http:25895;'",
+                "export PAI_CONTAINER_HOST_tcp_PORT_LIST='23652,22505'",
+                "export PAI_CONTAINER_HOST_ssh_PORT_LIST='31055'",
+                "export PAI_PORT_LIST_taskrole_0_tcp='23652,22505'",
+                "export PAI_taskrole1_0_udp_PORT='37633,27232'",
+                "export PAI_taskrole1_0_mpi_PORT='27760'",
+                "export PAI_CONTAINER_HOST_PORT='25895'",
+                "export PAI_CONTAINER_SSH_PORT='31055'"
+            ],
+            [
+                "export PAI_PORT_LIST_taskrole_0_tpc='37594,23725,27746,33765,36824,31446,25354,22922,25183,23174'",
+                ("export PAI_CONTAINER_HOST_PORT_LIST='tpc:37594,23725,27746,33765,36824,31446,25354,22922,25183,23174;"
+                 "udp:32700,37444,26550,35841,33489,28822,25998,34164,21585,26715;ssh:32859;http:37991;'"
+                 ),
+                "export PAI_taskrole_1_tpc_PORT='27769,31957,23668,28129,38436,38270,28092,33059,38318,29327'",
+                "export PAI_PORT_LIST_taskrole_0_http='37991'",
+                "export PAI_taskrole_0_udp_PORT='32700,37444,26550,35841,33489,28822,25998,34164,21585,26715'",
+                "export PAI_CONTAINER_SSH_PORT='32859'"
+            ]
+        ]
+        for index, file_name in enumerate(test_files):
+            with open(file_name, "r") as f:
+                framework = json.load(f)
+
+            sys.stdout = temp_stdout = StringIO()
+
+            generate_runtime_env(framework)
+            runtime_env = temp_stdout.getvalue().splitlines()
+
+            sys.stdout = sys.__stdout__
+
+            for expect in expect_lines[index]:
+                self.assertIn(expect, runtime_env)
 
         del os.environ["FC_TASK_INDEX"]
         del os.environ["FC_TASKROLE_NAME"]
