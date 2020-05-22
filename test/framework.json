@@ -3,21 +3,22 @@
   "kind": "Framework",
   "metadata": {
     "annotations": {
-      "config": "protocolVersion: 2\nname: testuser_7c61921e\ntype: job\njobRetryCount: 0\nprerequisites:\n  - type: dockerimage\n    uri: openpai/tensorflow-py36-cu90\n    name: docker_image_1\ntaskRoles:\n  taskrole:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_1\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        tcp: 2\n    commands:\n      - printenv\n  taskrole_1:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_1\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        udp: 2\n        mpi: 1\n    commands:\n      - printenv\ndefaults:\n  virtualCluster: default\nextras:\n  com.microsoft.pai.runtimeplugin:\n    - plugin: ssh\n      parameters:\n        jobssh: true\n    - plugin: teamwise_storage\n      parameters:\n        storageConfigNames:\n          - confignfs\n",
-      "jobName": "testuser_7c61921e",
+      "config": "protocolVersion: 2\nname: test\ntype: job\njobRetryCount: 0\nprerequisites:\n  - type: dockerimage\n    uri: 'openpai/standard:python_3.6-pytorch_1.2.0-gpu'\n    name: docker_image_0\ntaskRoles:\n  taskrole:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_0\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        tcp: 3\n        udp: 3\n    commands:\n      - printenv\n  taskrole_1:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_0\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        mpi: 2\n        tensorflow: 1\n    commands:\n      - printenv\ndefaults:\n  virtualCluster: default\nextras:\n  com.microsoft.pai.runtimeplugin:\n    - plugin: ssh\n      parameters:\n        jobssh: true\n",
+      "jobName": "test",
+      "logPathInfix": "51b333b433467483e9e16fcff34ceeda",
       "totalGpuNumber": "2"
     },
-    "creationTimestamp": "2020-05-09T03:32:11Z",
-    "generation": 7,
+    "creationTimestamp": "2020-05-22T03:18:43Z",
+    "generation": 19,
     "labels": {
-      "userName": "testuser",
+      "userName": "test_user",
       "virtualCluster": "default"
     },
-    "name": "a39c400656b0168b6846c31fd09aa670",
+    "name": "51b333b433467483e9e16fcff34ceeda",
     "namespace": "default",
-    "resourceVersion": "34061477",
-    "selfLink": "/apis/frameworkcontroller.microsoft.com/v1/namespaces/default/frameworks/a39c400656b0168b6846c31fd09aa670",
-    "uid": "07843b4b-bf33-4f0d-96bd-0918b499e32d"
+    "resourceVersion": "48376615",
+    "selfLink": "/apis/frameworkcontroller.microsoft.com/v1/namespaces/default/frameworks/51b333b433467483e9e16fcff34ceeda",
+    "uid": "f0f0e75a-9bda-11ea-830b-000d3ab25bb6"
   },
   "spec": {
     "description": "",
@@ -38,13 +39,12 @@
             "metadata": {
               "annotations": {
                 "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
-                "hivedscheduler.microsoft.com/pod-scheduling-spec": "virtualCluster: default\npriority: 10\ngpuType: null\nreservationId: null\ngpuNumber: 1\naffinityGroup:\n  name: testuser~testuser_7c61921e/default\n  members:\n    - podNumber: 1\n      gpuNumber: 1\n    - podNumber: 1\n      gpuNumber: 1\n",
-                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"tcp\":{\"start\":27574,\"count\":2},\"ssh\":{\"start\":22055,\"count\":1},\"http\":{\"start\":22904,\"count\":1}}}"
+                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"tcp\":{\"count\":3},\"udp\":{\"count\":3},\"ssh\":{\"count\":1},\"http\":{\"count\":1}}}"
               },
               "creationTimestamp": null,
               "labels": {
                 "type": "kube-launcher-task",
-                "userName": "testuser",
+                "userName": "test_user",
                 "virtualCluster": "default"
               }
             },
@@ -72,15 +72,15 @@
                   "env": [
                     {
                       "name": "PAI_FRAMEWORK_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_JOB_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_USER_NAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_DEFAULT_FS_URI"
@@ -127,7 +127,7 @@
                     },
                     {
                       "name": "PAI_USERNAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_TASKS_NUM",
@@ -168,33 +168,17 @@
                           "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
                         }
                       }
-                    },
-                    {
-                      "name": "NVIDIA_VISIBLE_DEVICES",
-                      "valueFrom": {
-                        "fieldRef": {
-                          "fieldPath": "metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']"
-                        }
-                      }
-                    },
-                    {
-                      "name": "PAI_AMD_VISIBLE_DEVICES",
-                      "valueFrom": {
-                        "fieldRef": {
-                          "fieldPath": "metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']"
-                        }
-                      }
                     }
                   ],
-                  "image": "openpai/tensorflow-py36-cu90",
+                  "image": "openpai/standard:python_3.6-pytorch_1.2.0-gpu",
                   "imagePullPolicy": "Always",
                   "name": "app",
                   "resources": {
                     "limits": {
                       "cpu": "4",
                       "github.com/fuse": "1",
-                      "hivedscheduler.microsoft.com/pod-scheduling-enable": "1",
-                      "memory": "8Gi"
+                      "memory": "8Gi",
+                      "nvidia.com/gpu": "1"
                     }
                   },
                   "securityContext": {
@@ -216,7 +200,7 @@
                     {
                       "mountPath": "/usr/local/pai/logs",
                       "name": "host-log",
-                      "subPath": "testuser/testuser_7c61921e/taskrole"
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole"
                     },
                     {
                       "mountPath": "/usr/local/pai/ssh-secret",
@@ -241,27 +225,23 @@
                     },
                     {
                       "name": "KUBE_APISERVER_ADDRESS",
-                      "value": "https://10.192.0.1:443"
+                      "value": "http://10.151.40.4:8080"
                     },
                     {
                       "name": "GANG_ALLOCATION",
                       "value": "true"
                     },
                     {
-                      "name": "STORAGE_CONFIGS",
-                      "value": "[\"confignfs\"]"
-                    },
-                    {
                       "name": "PAI_FRAMEWORK_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_JOB_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_USER_NAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_DEFAULT_FS_URI"
@@ -308,7 +288,7 @@
                     },
                     {
                       "name": "PAI_USERNAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_TASKS_NUM",
@@ -343,7 +323,7 @@
                       }
                     }
                   ],
-                  "image": "docker.io/openpai/kube-runtime:v0.17.0",
+                  "image": "openpai/openpai-runtime:test_user",
                   "imagePullPolicy": "Always",
                   "name": "init",
                   "resources": {},
@@ -355,7 +335,7 @@
                     {
                       "mountPath": "/usr/local/pai/logs",
                       "name": "host-log",
-                      "subPath": "testuser/testuser_7c61921e/taskrole"
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole"
                     },
                     {
                       "mountPath": "/usr/local/pai-config",
@@ -364,9 +344,8 @@
                   ]
                 }
               ],
-              "priorityClassName": "a39c400656b0168b6846c31fd09aa670-priority",
+              "priorityClassName": "51b333b433467483e9e16fcff34ceeda-priority",
               "restartPolicy": "Never",
-              "schedulerName": "hivedscheduler-ds-default",
               "serviceAccountName": "runtime-account",
               "volumes": [
                 {
@@ -420,13 +399,12 @@
             "metadata": {
               "annotations": {
                 "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
-                "hivedscheduler.microsoft.com/pod-scheduling-spec": "virtualCluster: default\npriority: 10\ngpuType: null\nreservationId: null\ngpuNumber: 1\naffinityGroup:\n  name: testuser~testuser_7c61921e/default\n  members:\n    - podNumber: 1\n      gpuNumber: 1\n    - podNumber: 1\n      gpuNumber: 1\n",
-                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"udp\":{\"start\":32153,\"count\":2},\"mpi\":{\"start\":21793,\"count\":1},\"ssh\":{\"start\":32584,\"count\":1},\"http\":{\"start\":22819,\"count\":1}}}"
+                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"mpi\":{\"count\":2},\"tensorflow\":{\"count\":1},\"ssh\":{\"count\":1},\"http\":{\"count\":1}}}"
               },
               "creationTimestamp": null,
               "labels": {
                 "type": "kube-launcher-task",
-                "userName": "testuser",
+                "userName": "test_user",
                 "virtualCluster": "default"
               }
             },
@@ -454,15 +432,15 @@
                   "env": [
                     {
                       "name": "PAI_FRAMEWORK_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_JOB_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_USER_NAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_DEFAULT_FS_URI"
@@ -509,7 +487,7 @@
                     },
                     {
                       "name": "PAI_USERNAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_TASKS_NUM",
@@ -550,33 +528,17 @@
                           "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
                         }
                       }
-                    },
-                    {
-                      "name": "NVIDIA_VISIBLE_DEVICES",
-                      "valueFrom": {
-                        "fieldRef": {
-                          "fieldPath": "metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']"
-                        }
-                      }
-                    },
-                    {
-                      "name": "PAI_AMD_VISIBLE_DEVICES",
-                      "valueFrom": {
-                        "fieldRef": {
-                          "fieldPath": "metadata.annotations['hivedscheduler.microsoft.com/pod-gpu-isolation']"
-                        }
-                      }
                     }
                   ],
-                  "image": "openpai/tensorflow-py36-cu90",
+                  "image": "openpai/standard:python_3.6-pytorch_1.2.0-gpu",
                   "imagePullPolicy": "Always",
                   "name": "app",
                   "resources": {
                     "limits": {
                       "cpu": "4",
                       "github.com/fuse": "1",
-                      "hivedscheduler.microsoft.com/pod-scheduling-enable": "1",
-                      "memory": "8Gi"
+                      "memory": "8Gi",
+                      "nvidia.com/gpu": "1"
                     }
                   },
                   "securityContext": {
@@ -598,7 +560,7 @@
                     {
                       "mountPath": "/usr/local/pai/logs",
                       "name": "host-log",
-                      "subPath": "testuser/testuser_7c61921e/taskrole1"
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole1"
                     },
                     {
                       "mountPath": "/usr/local/pai/ssh-secret",
@@ -623,27 +585,23 @@
                     },
                     {
                       "name": "KUBE_APISERVER_ADDRESS",
-                      "value": "https://10.192.0.1:443"
+                      "value": "http://10.151.40.4:8080"
                     },
                     {
                       "name": "GANG_ALLOCATION",
                       "value": "true"
                     },
                     {
-                      "name": "STORAGE_CONFIGS",
-                      "value": "[\"confignfs\"]"
-                    },
-                    {
                       "name": "PAI_FRAMEWORK_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_JOB_NAME",
-                      "value": "testuser~testuser_7c61921e"
+                      "value": "test_user~test"
                     },
                     {
                       "name": "PAI_USER_NAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_DEFAULT_FS_URI"
@@ -690,7 +648,7 @@
                     },
                     {
                       "name": "PAI_USERNAME",
-                      "value": "testuser"
+                      "value": "test_user"
                     },
                     {
                       "name": "PAI_TASKS_NUM",
@@ -725,7 +683,7 @@
                       }
                     }
                   ],
-                  "image": "docker.io/openpai/kube-runtime:v0.17.0",
+                  "image": "openpai/openpai-runtime:test_user",
                   "imagePullPolicy": "Always",
                   "name": "init",
                   "resources": {},
@@ -737,7 +695,7 @@
                     {
                       "mountPath": "/usr/local/pai/logs",
                       "name": "host-log",
-                      "subPath": "testuser/testuser_7c61921e/taskrole1"
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole1"
                     },
                     {
                       "mountPath": "/usr/local/pai-config",
@@ -746,9 +704,8 @@
                   ]
                 }
               ],
-              "priorityClassName": "a39c400656b0168b6846c31fd09aa670-priority",
+              "priorityClassName": "51b333b433467483e9e16fcff34ceeda-priority",
               "restartPolicy": "Never",
-              "schedulerName": "hivedscheduler-ds-default",
               "serviceAccountName": "runtime-account",
               "volumes": [
                 {
@@ -795,42 +752,77 @@
   },
   "status": {
     "attemptStatus": {
-      "completionStatus": null,
-      "completionTime": null,
-      "configMapName": "a39c400656b0168b6846c31fd09aa670-attempt",
-      "configMapUID": "f8ed42cc-64ca-4c6a-93da-adfadc1611c3",
+      "completionStatus": {
+        "code": 0,
+        "diagnostics": "Pod succeeded",
+        "phrase": "Succeeded",
+        "trigger": {
+          "message": "All Tasks are completed and no user specified conditions in FrameworkAttemptCompletionPolicy have ever been triggered: TotalTaskCount: 2, FailedTaskCount: 0",
+          "taskIndex": 0,
+          "taskRoleName": "taskrole1"
+        },
+        "type": {
+          "attributes": [],
+          "name": "Succeeded"
+        }
+      },
+      "completionTime": "2020-05-22T03:19:33Z",
+      "configMapName": "51b333b433467483e9e16fcff34ceeda-attempt",
+      "configMapUID": "f0f47860-9bda-11ea-830b-000d3ab25bb6",
       "id": 0,
-      "instanceUID": "0_f8ed42cc-64ca-4c6a-93da-adfadc1611c3",
-      "runTime": null,
-      "startTime": "2020-05-09T03:32:11Z",
+      "instanceUID": "0_f0f47860-9bda-11ea-830b-000d3ab25bb6",
+      "runTime": "2020-05-22T03:19:26Z",
+      "startTime": "2020-05-22T03:18:43Z",
       "taskRoleStatuses": [
         {
           "name": "taskrole",
           "taskStatuses": [
             {
               "attemptStatus": {
-                "completionStatus": null,
-                "completionTime": null,
+                "completionStatus": {
+                  "code": 0,
+                  "diagnostics": "Pod succeeded",
+                  "phrase": "Succeeded",
+                  "pod": {
+                    "containers": [
+                      {
+                        "code": 0,
+                        "name": "init",
+                        "reason": "Completed"
+                      },
+                      {
+                        "code": 0,
+                        "name": "app",
+                        "reason": "Completed"
+                      }
+                    ]
+                  },
+                  "type": {
+                    "attributes": [],
+                    "name": "Succeeded"
+                  }
+                },
+                "completionTime": "2020-05-22T03:19:32Z",
                 "id": 0,
-                "instanceUID": "0_2320bc0d-db98-4969-965f-077953c6aee9",
-                "podHostIP": "10.151.40.108",
-                "podIP": "10.151.40.108",
-                "podName": "a39c400656b0168b6846c31fd09aa670-taskrole-0",
-                "podNodeName": "prodk80bg00001s",
-                "podUID": "2320bc0d-db98-4969-965f-077953c6aee9",
-                "runTime": null,
-                "startTime": "2020-05-09T03:32:11Z"
+                "instanceUID": "0_f1020521-9bda-11ea-830b-000d3ab25bb6",
+                "podHostIP": "10.151.41.8",
+                "podIP": "10.151.41.8",
+                "podName": "51b333b433467483e9e16fcff34ceeda-taskrole-0",
+                "podNodeName": "10.151.41.8",
+                "podUID": "f1020521-9bda-11ea-830b-000d3ab25bb6",
+                "runTime": "2020-05-22T03:19:26Z",
+                "startTime": "2020-05-22T03:18:43Z"
               },
-              "completionTime": null,
+              "completionTime": "2020-05-22T03:19:32Z",
               "index": 0,
               "retryPolicyStatus": {
                 "accountableRetriedCount": 0,
                 "retryDelaySec": null,
                 "totalRetriedCount": 0
               },
-              "startTime": "2020-05-09T03:32:11Z",
-              "state": "AttemptPreparing",
-              "transitionTime": "2020-05-09T03:32:11Z"
+              "startTime": "2020-05-22T03:18:43Z",
+              "state": "Completed",
+              "transitionTime": "2020-05-22T03:19:32Z"
             }
           ]
         },
@@ -839,41 +831,63 @@
           "taskStatuses": [
             {
               "attemptStatus": {
-                "completionStatus": null,
-                "completionTime": null,
+                "completionStatus": {
+                  "code": 0,
+                  "diagnostics": "Pod succeeded",
+                  "phrase": "Succeeded",
+                  "pod": {
+                    "containers": [
+                      {
+                        "code": 0,
+                        "name": "init",
+                        "reason": "Completed"
+                      },
+                      {
+                        "code": 0,
+                        "name": "app",
+                        "reason": "Completed"
+                      }
+                    ]
+                  },
+                  "type": {
+                    "attributes": [],
+                    "name": "Succeeded"
+                  }
+                },
+                "completionTime": "2020-05-22T03:19:32Z",
                 "id": 0,
-                "instanceUID": "0_9dd75861-f050-4a24-9cd6-b48a180571d2",
-                "podHostIP": "10.151.40.108",
-                "podIP": "10.151.40.108",
-                "podName": "a39c400656b0168b6846c31fd09aa670-taskrole1-0",
-                "podNodeName": "prodk80bg00001s",
-                "podUID": "9dd75861-f050-4a24-9cd6-b48a180571d2",
-                "runTime": null,
-                "startTime": "2020-05-09T03:32:11Z"
+                "instanceUID": "0_f102a4a7-9bda-11ea-830b-000d3ab25bb6",
+                "podHostIP": "10.151.41.9",
+                "podIP": "10.151.41.9",
+                "podName": "51b333b433467483e9e16fcff34ceeda-taskrole1-0",
+                "podNodeName": "10.151.41.9",
+                "podUID": "f102a4a7-9bda-11ea-830b-000d3ab25bb6",
+                "runTime": "2020-05-22T03:19:27Z",
+                "startTime": "2020-05-22T03:18:43Z"
               },
-              "completionTime": null,
+              "completionTime": "2020-05-22T03:19:32Z",
               "index": 0,
               "retryPolicyStatus": {
                 "accountableRetriedCount": 0,
                 "retryDelaySec": null,
                 "totalRetriedCount": 0
               },
-              "startTime": "2020-05-09T03:32:11Z",
-              "state": "AttemptPreparing",
-              "transitionTime": "2020-05-09T03:32:11Z"
+              "startTime": "2020-05-22T03:18:43Z",
+              "state": "Completed",
+              "transitionTime": "2020-05-22T03:19:32Z"
             }
           ]
         }
       ]
     },
-    "completionTime": null,
+    "completionTime": "2020-05-22T03:19:33Z",
     "retryPolicyStatus": {
       "accountableRetriedCount": 0,
       "retryDelaySec": null,
       "totalRetriedCount": 0
     },
-    "startTime": "2020-05-09T03:32:11Z",
-    "state": "AttemptPreparing",
-    "transitionTime": "2020-05-09T03:32:11Z"
+    "startTime": "2020-05-22T03:18:43Z",
+    "state": "Completed",
+    "transitionTime": "2020-05-22T03:19:33Z"
   }
 }
