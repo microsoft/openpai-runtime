@@ -1,0 +1,893 @@
+{
+  "apiVersion": "frameworkcontroller.microsoft.com/v1",
+  "kind": "Framework",
+  "metadata": {
+    "annotations": {
+      "config": "protocolVersion: 2\nname: test\ntype: job\njobRetryCount: 0\nprerequisites:\n  - type: dockerimage\n    uri: 'openpai/standard:python_3.6-pytorch_1.2.0-gpu'\n    name: docker_image_0\ntaskRoles:\n  taskrole:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_0\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        tcp: 3\n        udp: 3\n    commands:\n      - printenv\n  taskrole_1:\n    instances: 1\n    completion:\n      minFailedInstances: 1\n      minSucceededInstances: -1\n    taskRetryCount: 0\n    dockerImage: docker_image_0\n    resourcePerInstance:\n      gpu: 1\n      cpu: 4\n      memoryMB: 8192\n      ports:\n        mpi: 2\n        tensorflow: 1\n    commands:\n      - printenv\ndefaults:\n  virtualCluster: default\nextras:\n  com.microsoft.pai.runtimeplugin:\n    - plugin: ssh\n      parameters:\n        jobssh: true\n",
+      "jobName": "test",
+      "logPathInfix": "51b333b433467483e9e16fcff34ceeda",
+      "totalGpuNumber": "2"
+    },
+    "creationTimestamp": "2020-05-22T03:18:43Z",
+    "generation": 19,
+    "labels": {
+      "userName": "test_user",
+      "virtualCluster": "default"
+    },
+    "name": "51b333b433467483e9e16fcff34ceeda",
+    "namespace": "default",
+    "resourceVersion": "48376615",
+    "selfLink": "/apis/frameworkcontroller.microsoft.com/v1/namespaces/default/frameworks/51b333b433467483e9e16fcff34ceeda",
+    "uid": "f0f0e75a-9bda-11ea-830b-000d3ab25bb6"
+  },
+  "spec": {
+    "description": "",
+    "executionType": "Start",
+    "retryPolicy": {
+      "fancyRetryPolicy": true,
+      "maxRetryCount": 0
+    },
+    "taskRoles": [
+      {
+        "frameworkAttemptCompletionPolicy": {
+          "minFailedTaskCount": 1,
+          "minSucceededTaskCount": -1
+        },
+        "name": "taskrole",
+        "task": {
+          "pod": {
+            "metadata": {
+              "annotations": {
+                "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
+                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"tcp\":{\"count\":3},\"udp\":{\"count\":3},\"ssh\":{\"count\":1},\"http\":{\"count\":1}}}"
+              },
+              "creationTimestamp": null,
+              "labels": {
+                "type": "kube-launcher-task",
+                "userName": "test_user",
+                "virtualCluster": "default"
+              }
+            },
+            "spec": {
+              "affinity": {
+                "nodeAffinity": {
+                  "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                      {
+                        "matchExpressions": [
+                          {
+                            "key": "pai-worker",
+                            "operator": "In",
+                            "values": ["true"]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "containers": [
+                {
+                  "command": ["/usr/local/pai/runtime"],
+                  "env": [
+                    {
+                      "name": "PAI_FRAMEWORK_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_JOB_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_USER_NAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_DEFAULT_FS_URI"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole_1",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole_1",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_USERNAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_TASKS_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLES_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_NAME",
+                      "value": "taskrole"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    },
+                    {
+                      "name": "PAI_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "openpai/standard:python_3.6-pytorch_1.2.0-gpu",
+                  "imagePullPolicy": "Always",
+                  "name": "app",
+                  "resources": {
+                    "limits": {
+                      "cpu": "4",
+                      "github.com/fuse": "1",
+                      "memory": "8Gi",
+                      "nvidia.com/gpu": "1"
+                    }
+                  },
+                  "securityContext": {
+                    "capabilities": {
+                      "add": ["SYS_ADMIN", "IPC_LOCK", "DAC_READ_SEARCH"],
+                      "drop": ["MKNOD"]
+                    }
+                  },
+                  "terminationMessagePath": "/tmp/pai-termination-log",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/dev/shm",
+                      "name": "dshm"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai",
+                      "name": "pai-vol"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/logs",
+                      "name": "host-log",
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/ssh-secret",
+                      "name": "job-ssh-secret-volume",
+                      "readOnly": true
+                    }
+                  ]
+                }
+              ],
+              "hostNetwork": true,
+              "imagePullSecrets": [
+                {
+                  "name": "pai-secret"
+                }
+              ],
+              "initContainers": [
+                {
+                  "env": [
+                    {
+                      "name": "USER_CMD",
+                      "value": "printenv"
+                    },
+                    {
+                      "name": "KUBE_APISERVER_ADDRESS",
+                      "value": "http://10.151.40.4:8080"
+                    },
+                    {
+                      "name": "GANG_ALLOCATION",
+                      "value": "true"
+                    },
+                    {
+                      "name": "PAI_FRAMEWORK_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_JOB_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_USER_NAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_DEFAULT_FS_URI"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole_1",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole_1",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_USERNAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_TASKS_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLES_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_NAME",
+                      "value": "taskrole"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "openpai/openpai-runtime:test_user",
+                  "imagePullPolicy": "Always",
+                  "name": "init",
+                  "resources": {},
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/usr/local/pai",
+                      "name": "pai-vol"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/logs",
+                      "name": "host-log",
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai-config",
+                      "name": "job-exit-spec"
+                    }
+                  ]
+                }
+              ],
+              "priorityClassName": "51b333b433467483e9e16fcff34ceeda-priority",
+              "restartPolicy": "Never",
+              "serviceAccountName": "runtime-account",
+              "volumes": [
+                {
+                  "emptyDir": {
+                    "medium": "Memory",
+                    "sizeLimit": "512Mi"
+                  },
+                  "name": "dshm"
+                },
+                {
+                  "emptyDir": {},
+                  "name": "pai-vol"
+                },
+                {
+                  "hostPath": {
+                    "path": "/var/log/pai"
+                  },
+                  "name": "host-log"
+                },
+                {
+                  "name": "job-ssh-secret-volume",
+                  "secret": {
+                    "secretName": "job-ssh-secret"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "runtime-exit-spec-configuration"
+                  },
+                  "name": "job-exit-spec"
+                }
+              ]
+            }
+          },
+          "podGracefulDeletionTimeoutSec": 1800,
+          "retryPolicy": {
+            "fancyRetryPolicy": false,
+            "maxRetryCount": 0
+          }
+        },
+        "taskNumber": 1
+      },
+      {
+        "frameworkAttemptCompletionPolicy": {
+          "minFailedTaskCount": 1,
+          "minSucceededTaskCount": -1
+        },
+        "name": "taskrole1",
+        "task": {
+          "pod": {
+            "metadata": {
+              "annotations": {
+                "container.apparmor.security.beta.kubernetes.io/app": "unconfined",
+                "rest-server/port-scheduling-spec": "{\"schedulePortStart\":20000,\"schedulePortEnd\":40000,\"ports\":{\"mpi\":{\"count\":2},\"tensorflow\":{\"count\":1},\"ssh\":{\"count\":1},\"http\":{\"count\":1}}}"
+              },
+              "creationTimestamp": null,
+              "labels": {
+                "type": "kube-launcher-task",
+                "userName": "test_user",
+                "virtualCluster": "default"
+              }
+            },
+            "spec": {
+              "affinity": {
+                "nodeAffinity": {
+                  "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                      {
+                        "matchExpressions": [
+                          {
+                            "key": "pai-worker",
+                            "operator": "In",
+                            "values": ["true"]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "containers": [
+                {
+                  "command": ["/usr/local/pai/runtime"],
+                  "env": [
+                    {
+                      "name": "PAI_FRAMEWORK_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_JOB_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_USER_NAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_DEFAULT_FS_URI"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole_1",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole_1",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_USERNAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_TASKS_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLES_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_NAME",
+                      "value": "taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    },
+                    {
+                      "name": "PAI_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "openpai/standard:python_3.6-pytorch_1.2.0-gpu",
+                  "imagePullPolicy": "Always",
+                  "name": "app",
+                  "resources": {
+                    "limits": {
+                      "cpu": "4",
+                      "github.com/fuse": "1",
+                      "memory": "8Gi",
+                      "nvidia.com/gpu": "1"
+                    }
+                  },
+                  "securityContext": {
+                    "capabilities": {
+                      "add": ["SYS_ADMIN", "IPC_LOCK", "DAC_READ_SEARCH"],
+                      "drop": ["MKNOD"]
+                    }
+                  },
+                  "terminationMessagePath": "/tmp/pai-termination-log",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/dev/shm",
+                      "name": "dshm"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai",
+                      "name": "pai-vol"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/logs",
+                      "name": "host-log",
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole1"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/ssh-secret",
+                      "name": "job-ssh-secret-volume",
+                      "readOnly": true
+                    }
+                  ]
+                }
+              ],
+              "hostNetwork": true,
+              "imagePullSecrets": [
+                {
+                  "name": "pai-secret"
+                }
+              ],
+              "initContainers": [
+                {
+                  "env": [
+                    {
+                      "name": "USER_CMD",
+                      "value": "printenv"
+                    },
+                    {
+                      "name": "KUBE_APISERVER_ADDRESS",
+                      "value": "http://10.151.40.4:8080"
+                    },
+                    {
+                      "name": "GANG_ALLOCATION",
+                      "value": "true"
+                    },
+                    {
+                      "name": "PAI_FRAMEWORK_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_JOB_NAME",
+                      "value": "test_user~test"
+                    },
+                    {
+                      "name": "PAI_USER_NAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_DEFAULT_FS_URI"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLE_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_RESOURCE_taskrole_1",
+                      "value": "1,4,8192,0"
+                    },
+                    {
+                      "name": "PAI_MIN_FAILED_TASK_COUNT_taskrole_1",
+                      "value": "1"
+                    },
+                    {
+                      "name": "PAI_MIN_SUCCEEDED_TASK_COUNT_taskrole_1",
+                      "value": "-1"
+                    },
+                    {
+                      "name": "PAI_USERNAME",
+                      "value": "test_user"
+                    },
+                    {
+                      "name": "PAI_TASKS_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_TASK_ROLES_NUM",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_COUNT",
+                      "value": "2"
+                    },
+                    {
+                      "name": "PAI_JOB_TASK_ROLE_LIST",
+                      "value": "taskrole,taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_NAME",
+                      "value": "taskrole_1"
+                    },
+                    {
+                      "name": "PAI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX",
+                      "valueFrom": {
+                        "fieldRef": {
+                          "fieldPath": "metadata.annotations['FC_TASK_INDEX']"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "openpai/openpai-runtime:test_user",
+                  "imagePullPolicy": "Always",
+                  "name": "init",
+                  "resources": {},
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/usr/local/pai",
+                      "name": "pai-vol"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai/logs",
+                      "name": "host-log",
+                      "subPath": "test_user/51b333b433467483e9e16fcff34ceeda/taskrole1"
+                    },
+                    {
+                      "mountPath": "/usr/local/pai-config",
+                      "name": "job-exit-spec"
+                    }
+                  ]
+                }
+              ],
+              "priorityClassName": "51b333b433467483e9e16fcff34ceeda-priority",
+              "restartPolicy": "Never",
+              "serviceAccountName": "runtime-account",
+              "volumes": [
+                {
+                  "emptyDir": {
+                    "medium": "Memory",
+                    "sizeLimit": "512Mi"
+                  },
+                  "name": "dshm"
+                },
+                {
+                  "emptyDir": {},
+                  "name": "pai-vol"
+                },
+                {
+                  "hostPath": {
+                    "path": "/var/log/pai"
+                  },
+                  "name": "host-log"
+                },
+                {
+                  "name": "job-ssh-secret-volume",
+                  "secret": {
+                    "secretName": "job-ssh-secret"
+                  }
+                },
+                {
+                  "configMap": {
+                    "name": "runtime-exit-spec-configuration"
+                  },
+                  "name": "job-exit-spec"
+                }
+              ]
+            }
+          },
+          "podGracefulDeletionTimeoutSec": 1800,
+          "retryPolicy": {
+            "fancyRetryPolicy": false,
+            "maxRetryCount": 0
+          }
+        },
+        "taskNumber": 1
+      }
+    ]
+  },
+  "status": {
+    "attemptStatus": {
+      "completionStatus": {
+        "code": 0,
+        "diagnostics": "Pod succeeded",
+        "phrase": "Succeeded",
+        "trigger": {
+          "message": "All Tasks are completed and no user specified conditions in FrameworkAttemptCompletionPolicy have ever been triggered: TotalTaskCount: 2, FailedTaskCount: 0",
+          "taskIndex": 0,
+          "taskRoleName": "taskrole1"
+        },
+        "type": {
+          "attributes": [],
+          "name": "Succeeded"
+        }
+      },
+      "completionTime": "2020-05-22T03:19:33Z",
+      "configMapName": "51b333b433467483e9e16fcff34ceeda-attempt",
+      "configMapUID": "f0f47860-9bda-11ea-830b-000d3ab25bb6",
+      "id": 0,
+      "instanceUID": "0_f0f47860-9bda-11ea-830b-000d3ab25bb6",
+      "runTime": "2020-05-22T03:19:26Z",
+      "startTime": "2020-05-22T03:18:43Z",
+      "taskRoleStatuses": [
+        {
+          "name": "taskrole",
+          "taskStatuses": [
+            {
+              "attemptStatus": {
+                "completionStatus": {
+                  "code": 0,
+                  "diagnostics": "Pod succeeded",
+                  "phrase": "Succeeded",
+                  "pod": {
+                    "containers": [
+                      {
+                        "code": 0,
+                        "name": "init",
+                        "reason": "Completed"
+                      },
+                      {
+                        "code": 0,
+                        "name": "app",
+                        "reason": "Completed"
+                      }
+                    ]
+                  },
+                  "type": {
+                    "attributes": [],
+                    "name": "Succeeded"
+                  }
+                },
+                "completionTime": "2020-05-22T03:19:32Z",
+                "id": 0,
+                "instanceUID": "0_f1020521-9bda-11ea-830b-000d3ab25bb6",
+                "podHostIP": "10.151.41.8",
+                "podIP": "10.151.41.8",
+                "podName": "51b333b433467483e9e16fcff34ceeda-taskrole-0",
+                "podNodeName": "10.151.41.8",
+                "podUID": "f1020521-9bda-11ea-830b-000d3ab25bb6",
+                "runTime": "2020-05-22T03:19:26Z",
+                "startTime": "2020-05-22T03:18:43Z"
+              },
+              "completionTime": "2020-05-22T03:19:32Z",
+              "index": 0,
+              "retryPolicyStatus": {
+                "accountableRetriedCount": 0,
+                "retryDelaySec": null,
+                "totalRetriedCount": 0
+              },
+              "startTime": "2020-05-22T03:18:43Z",
+              "state": "Completed",
+              "transitionTime": "2020-05-22T03:19:32Z"
+            }
+          ]
+        },
+        {
+          "name": "taskrole1",
+          "taskStatuses": [
+            {
+              "attemptStatus": {
+                "completionStatus": {
+                  "code": 0,
+                  "diagnostics": "Pod succeeded",
+                  "phrase": "Succeeded",
+                  "pod": {
+                    "containers": [
+                      {
+                        "code": 0,
+                        "name": "init",
+                        "reason": "Completed"
+                      },
+                      {
+                        "code": 0,
+                        "name": "app",
+                        "reason": "Completed"
+                      }
+                    ]
+                  },
+                  "type": {
+                    "attributes": [],
+                    "name": "Succeeded"
+                  }
+                },
+                "completionTime": "2020-05-22T03:19:32Z",
+                "id": 0,
+                "instanceUID": "0_f102a4a7-9bda-11ea-830b-000d3ab25bb6",
+                "podHostIP": "10.151.41.9",
+                "podIP": "10.151.41.9",
+                "podName": "51b333b433467483e9e16fcff34ceeda-taskrole1-0",
+                "podNodeName": "10.151.41.9",
+                "podUID": "f102a4a7-9bda-11ea-830b-000d3ab25bb6",
+                "runTime": "2020-05-22T03:19:27Z",
+                "startTime": "2020-05-22T03:18:43Z"
+              },
+              "completionTime": "2020-05-22T03:19:32Z",
+              "index": 0,
+              "retryPolicyStatus": {
+                "accountableRetriedCount": 0,
+                "retryDelaySec": null,
+                "totalRetriedCount": 0
+              },
+              "startTime": "2020-05-22T03:18:43Z",
+              "state": "Completed",
+              "transitionTime": "2020-05-22T03:19:32Z"
+            }
+          ]
+        }
+      ]
+    },
+    "completionTime": "2020-05-22T03:19:33Z",
+    "retryPolicyStatus": {
+      "accountableRetriedCount": 0,
+      "retryDelaySec": null,
+      "totalRetriedCount": 0
+    },
+    "startTime": "2020-05-22T03:18:43Z",
+    "state": "Completed",
+    "transitionTime": "2020-05-22T03:19:33Z"
+  }
+}

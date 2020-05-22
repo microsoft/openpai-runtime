@@ -18,6 +18,7 @@
 
 import argparse
 import base64
+import hashlib
 import logging
 import gzip
 import json
@@ -40,6 +41,31 @@ def decompress_field(field):
     data = gzip.decompress(base64.b64decode(field))
     obj = json.loads(data)
     return obj
+
+
+def generate_seq_ports_num(port_start, port_count, task_index):
+    base = port_start + port_count * task_index
+    return [str(port_num) for port_num in range(base, base + port_count)]
+
+
+def generate_hashed_ports_num(pod_uid, port_name, port_count, port_start,
+                              port_end):
+    """ Random generate the port number
+
+    The algorithm is:
+    (int(md5(podUid + portName + portIndex)[0:12] ,16) +
+     int(md5(podUid + portName + portIndex)[12:24] ,16) +
+     int(md5(podUid + portName + portIndex)[24:32] ,16)) % (port_end - port_start) + port_start
+    """
+    port_list = []
+    for i in range(port_count):
+        raw_str = "[{}][{}][{}]".format(pod_uid, port_name, str(i))
+        hash_str = hashlib.md5(raw_str.encode("utf8")).hexdigest()
+        port_list.append(
+            str((int(hash_str[:12], 16) + int(hash_str[12:24], 16) +
+                 int(hash_str[24:], 16)) % (port_end - port_start) +
+                port_start))
+    return port_list
 
 
 def generate_runtime_env(framework):  #pylint: disable=too-many-locals
@@ -96,41 +122,50 @@ def generate_runtime_env(framework):  #pylint: disable=too-many-locals
         for task in taskrole["taskStatuses"]:
             index = task["index"]
             current_ip = task["attemptStatus"]["podHostIP"]
+            pod_uid = task["attemptStatus"]["podUID"]
+            task_ports = {}
 
             taskrole_instances.append("{}:{}".format(name, index))
 
-            get_port_base = lambda port_name, p=ports, i=index: int(p[
-                port_name]["start"]) + int(p[port_name]["count"]) * int(i)
+            use_port_hash = True
+            if "ports" in ports and "schedulePortStart" in ports and "schedulePortEnd" in ports:
+                port_start = ports["schedulePortStart"]
+                port_end = ports["schedulePortEnd"]
+                port_list = ports["ports"]
+            else:
+                # for backward compatibility
+                use_port_hash = False
+                port_list = ports
 
-            # export ip/port for task role, current ip maybe None for non-gang-allocation
-            if current_ip:
-                export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
-                host_list.append("{}:{}".format(current_ip,
-                                                get_port_base("http")))
-
-            for port in ports.keys():
-                start, count = get_port_base(port), int(ports[port]["count"])
-                current_port_str = ",".join(
-                    str(x) for x in range(start, start + count))
+            for port in port_list.keys():
+                count = int(port_list[port]["count"])
+                task_ports[port] = generate_hashed_ports_num(
+                    pod_uid, port, count, port_start,
+                    port_end) if use_port_hash else generate_seq_ports_num(
+                        port_list[port]["start"], count, index)
+                current_port_str = ",".join(task_ports[port])
                 export("PAI_PORT_LIST_{}_{}_{}".format(name, index, port),
                        current_port_str)
                 export("PAI_{}_{}_{}_PORT".format(name, index, port),
                        current_port_str)
 
+            # export ip/port for task role, current ip maybe None for non-gang-allocation
+            if current_ip:
+                export("PAI_HOST_IP_{}_{}".format(name, index), current_ip)
+                host_list.append("{}:{}".format(current_ip,
+                                                task_ports["http"][0]))
+
             # export ip/port for current container
             if (current_taskrole_name == name
                     and current_task_index == str(index)):
                 export("PAI_CURRENT_CONTAINER_IP", current_ip)
-                export("PAI_CURRENT_CONTAINER_PORT", get_port_base("http"))
+                export("PAI_CURRENT_CONTAINER_PORT", task_ports["http"][0])
                 export("PAI_CONTAINER_HOST_IP", current_ip)
-                export("PAI_CONTAINER_HOST_PORT", get_port_base("http"))
-                export("PAI_CONTAINER_SSH_PORT", get_port_base("ssh"))
+                export("PAI_CONTAINER_HOST_PORT", task_ports["http"][0])
+                export("PAI_CONTAINER_SSH_PORT", task_ports["ssh"][0])
                 port_str = ""
-                for port in ports.keys():
-                    start, count = get_port_base(port), int(
-                        ports[port]["count"])
-                    current_port_str = ",".join(
-                        str(x) for x in range(start, start + count))
+                for port in port_list.keys():
+                    current_port_str = ",".join(task_ports[port])
                     export("PAI_CONTAINER_HOST_{}_PORT_LIST".format(port),
                            current_port_str)
                     port_str += "{}:{};".format(port, current_port_str)
