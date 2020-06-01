@@ -118,16 +118,18 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                     "Using default registry for image %s, ignore auth info",
                     self._image_uri)
                 return
-            self._registry_uri = registry_uri
 
         username = auth["username"] if "username" in auth else ""
         password = utils.render_string_with_secrets(
             auth["password"], secret) if "password" in auth else ""
+
+        # Only set auth info if username/password present
         if username and password:
             basic_auth_token = base64.b64encode(
                 bytes("{}:{}".format(username, password), "utf8")).decode()
             self._basic_auth_headers["Authorization"] = "{} {}".format(
                 BASIC_AUTH, basic_auth_token)
+            self._registry_uri = registry_uri
 
     # Refer: https://github.com/docker/distribution/blob/a8371794149d1d95f1e846744b05c87f2f825e5a/reference/normalize.go#L91
     def _is_default_domain_used(self) -> bool:
@@ -194,7 +196,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         uri_chunks = uri.split(":")
         tag = "latest" if len(uri_chunks) == 1 else uri_chunks[1]
         repository = uri_chunks[0]
-        if not re.fullmatch(r"(?:[a-z\-_.0-9]+\/)?[a-z\-_.0-9]+",
+        if not re.fullmatch(r"[a-z\-_.0-9]+[\/a-z\-_.0-9]*",
                             repository) or not re.fullmatch(
                                 r"[a-z\-_.0-9]+", tag):
             raise RuntimeError("image uri {} is invalid".format(
