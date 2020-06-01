@@ -73,6 +73,13 @@ def _parse_auth_challenge(challenge) -> dict:
 
 
 class ImageChecker():  #pylint: disable=too-few-public-methods
+    """
+    Class used to precheck docker image.
+
+    Notice: the image checker only works for docker registry which support v2 API and
+    enables https. For registry using v1 API or doesn't enable https. This check will passed,
+    and wrong image name may cause task hang.
+    """
     def __init__(self, job_config, secret):
         prerequisites = job_config["prerequisites"]
         task_role_name = os.getenv("PAI_CURRENT_TASK_ROLE_NAME")
@@ -86,7 +93,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         image_info = docker_images[0]
 
         self._image_uri = image_info["uri"]
-        self._registry_uri = DEFAULT_REGISTRY
+        self._registry_uri = self._get_registry_from_image_uri(
+            image_info["uri"])
         self._basic_auth_headers = {}
         self._bearer_auth_headers = {}
         self._registry_auth_type = BASIC_AUTH
@@ -95,28 +103,36 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             auth = image_info["auth"]
             self._init_auth_info(auth, secret)
 
+    def _get_registry_from_image_uri(self, image_uri) -> str:
+        if self._is_default_domain_used():
+            return DEFAULT_REGISTRY
+        index = self._image_uri.find("/")
+        return _get_registry_uri(image_uri[:index])
+
     def _init_auth_info(self, auth, secret) -> None:
         if "registryuri" in auth:
             registry_uri = _get_registry_uri(auth["registryuri"])
-            if self._is_image_use_default_domain(
+            if self._is_default_domain_used(
             ) and registry_uri != DEFAULT_REGISTRY:
                 LOGGER.info(
                     "Using default registry for image %s, ignore auth info",
                     self._image_uri)
                 return
-            self._registry_uri = registry_uri
 
         username = auth["username"] if "username" in auth else ""
         password = utils.render_string_with_secrets(
             auth["password"], secret) if "password" in auth else ""
+
+        # Only set auth info if username/password present
         if username and password:
             basic_auth_token = base64.b64encode(
                 bytes("{}:{}".format(username, password), "utf8")).decode()
             self._basic_auth_headers["Authorization"] = "{} {}".format(
                 BASIC_AUTH, basic_auth_token)
+            self._registry_uri = registry_uri
 
     # Refer: https://github.com/docker/distribution/blob/a8371794149d1d95f1e846744b05c87f2f825e5a/reference/normalize.go#L91
-    def _is_image_use_default_domain(self) -> bool:
+    def _is_default_domain_used(self) -> bool:
         index = self._image_uri.find("/")
         return index == -1 or all(ch not in [".", ":"]
                                   for ch in self._image_uri[:index])
@@ -171,7 +187,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
 
     def _get_normalized_image_info(self) -> dict:
         uri = self._image_uri
-        use_default_domain = self._is_image_use_default_domain()
+        use_default_domain = self._is_default_domain_used()
         if not use_default_domain:
             assert "/" in self._image_uri
             index = self._image_uri.find("/")
@@ -180,7 +196,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         uri_chunks = uri.split(":")
         tag = "latest" if len(uri_chunks) == 1 else uri_chunks[1]
         repository = uri_chunks[0]
-        if not re.fullmatch(r"(?:[a-z\-_.0-9]+\/)?[a-z\-_.0-9]+",
+        if not re.fullmatch(r"[a-z\-_.0-9]+[\/a-z\-_.0-9]*",
                             repository) or not re.fullmatch(
                                 r"[a-z\-_.0-9]+", tag):
             raise RuntimeError("image uri {} is invalid".format(

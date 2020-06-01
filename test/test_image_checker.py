@@ -216,6 +216,28 @@ class TestImageChecker(unittest.TestCase):
             self.assertRaises(RuntimeError,
                               mock_image_checker._get_normalized_image_info)
 
+    @patch.object(ImageChecker, "__init__")
+    def test_get_registry_from_image_uri(self, mock):
+        mock.return_value = None
+        mock_image_checker = ImageChecker({}, {})
+
+        test_cases = [{
+            "image_uri": "registry.domain:5000/user-name/repo-0:tag-0.version",
+            "expect_registry": "https://registry.domain:5000/v2/"
+        }, {
+            "image_uri": "username/repo:tag",
+            "expect_registry": "https://index.docker.io/v2/"
+        }, {
+            "image_uri": "test.azurecr.io/test-base:4dc825cebeam2",
+            "expect_registry": "https://test.azurecr.io/v2/"
+        }]
+
+        for test_case in test_cases:
+            mock_image_checker._image_uri = test_case["image_uri"]
+            registry_uri = mock_image_checker._get_registry_from_image_uri(
+                test_case["image_uri"])
+            self.assertEqual(registry_uri, test_case["expect_registry"])
+
 
 if __name__ == '__main__':
     unittest.main()
