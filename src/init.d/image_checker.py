@@ -86,7 +86,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         image_info = docker_images[0]
 
         self._image_uri = image_info["uri"]
-        self._registry_uri = DEFAULT_REGISTRY
+        self._registry_uri = self._get_registry_from_image_uri(
+            image_info["uri"])
         self._basic_auth_headers = {}
         self._bearer_auth_headers = {}
         self._registry_auth_type = BASIC_AUTH
@@ -94,6 +95,12 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         if "auth" in image_info and secret:
             auth = image_info["auth"]
             self._init_auth_info(auth, secret)
+
+    def _get_registry_from_image_uri(self, image_uri) -> str:
+        if self._is_image_use_default_domain():
+            return DEFAULT_REGISTRY
+        index = self._image_uri.find("/")
+        return _get_registry_uri(image_uri[:index])
 
     def _init_auth_info(self, auth, secret) -> None:
         if "registryuri" in auth:
