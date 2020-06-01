@@ -73,6 +73,13 @@ def _parse_auth_challenge(challenge) -> dict:
 
 
 class ImageChecker():  #pylint: disable=too-few-public-methods
+    """
+    Class used to precheck docker image.
+
+    Notice: the image checker only works for docker registry which support v2 API and
+    enables https. For registry using v1 API or doesn't enable https. This check will passed,
+    and wrong image name may cause task hang.
+    """
     def __init__(self, job_config, secret):
         prerequisites = job_config["prerequisites"]
         task_role_name = os.getenv("PAI_CURRENT_TASK_ROLE_NAME")
@@ -97,7 +104,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             self._init_auth_info(auth, secret)
 
     def _get_registry_from_image_uri(self, image_uri) -> str:
-        if self._is_image_use_default_domain():
+        if self._is_default_domain_used():
             return DEFAULT_REGISTRY
         index = self._image_uri.find("/")
         return _get_registry_uri(image_uri[:index])
@@ -105,7 +112,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
     def _init_auth_info(self, auth, secret) -> None:
         if "registryuri" in auth:
             registry_uri = _get_registry_uri(auth["registryuri"])
-            if self._is_image_use_default_domain(
+            if self._is_default_domain_used(
             ) and registry_uri != DEFAULT_REGISTRY:
                 LOGGER.info(
                     "Using default registry for image %s, ignore auth info",
@@ -123,7 +130,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 BASIC_AUTH, basic_auth_token)
 
     # Refer: https://github.com/docker/distribution/blob/a8371794149d1d95f1e846744b05c87f2f825e5a/reference/normalize.go#L91
-    def _is_image_use_default_domain(self) -> bool:
+    def _is_default_domain_used(self) -> bool:
         index = self._image_uri.find("/")
         return index == -1 or all(ch not in [".", ":"]
                                   for ch in self._image_uri[:index])
@@ -178,7 +185,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
 
     def _get_normalized_image_info(self) -> dict:
         uri = self._image_uri
-        use_default_domain = self._is_image_use_default_domain()
+        use_default_domain = self._is_default_domain_used()
         if not use_default_domain:
             assert "/" in self._image_uri
             index = self._image_uri.find("/")
