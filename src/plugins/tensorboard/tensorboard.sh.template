@@ -20,12 +20,16 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-TENSORFLOW_VERSION=$(python -c 'import tensorflow as tf; print(tf.__version__)')
+TENSORFLOW_VERSION=$(tensorboard --version_tb)
 MAJOR_VERSION=${TENSORFLOW_VERSION:0:1}
 if [[ "$MAJOR_VERSION" = "1" ]]; then
     tensorboard --logdir={{ logdir }} --port={{ port }} &
 elif [[ "$MAJOR_VERSION" = "2" ]]; then
-    tensorboard --logdir={{ logdir }} --port={{ port }} --bind_all &
+    {%- if multi_path is sameas false %}
+    tensorboard --logdir={{ logdir_v2 }} --port={{ port }} --bind_all &
+    {%- else %}
+    tensorboard --logdir_spec={{ logdir_spec }} --port={{ port }} --bind_all &
+    {%- endif %}
 else
     echo "Tensorflow version is ${TENSORFLOW_VERSION}, not support"
 fi
