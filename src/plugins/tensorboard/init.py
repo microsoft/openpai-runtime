@@ -33,11 +33,25 @@ TASK_ROLE_INDEX = int(os.getenv("PAI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX"))
 
 
 def generate_tensorboard_commands(template_file, parameters):
+    if len(parameters["logdir"]) == 0:
+        raise RuntimeError("logdir could not be empty")
+
+    multi_path = False
     logdir = ",".join(
         ["{}:{}".format(k, v) for k, v in parameters["logdir"].items()])
+    logdir_v2 = list(parameters["logdir"].values())[0]
+    # Backward compatibility with tensroboard v1
+    logdir_spec = logdir
+    if len(parameters["logdir"]) > 1:
+        multi_path = True
+
     with open(template_file) as f:
         template = Template(f.read())
-    return template.render(logdir=logdir, port=parameters["port"])
+    return template.render(logdir=logdir,
+                           port=parameters["port"],
+                           multi_path=multi_path,
+                           logdir_v2=logdir_v2,
+                           logdir_spec=logdir_spec)
 
 
 def main():
