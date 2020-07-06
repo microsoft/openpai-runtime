@@ -21,6 +21,7 @@ set -o pipefail
 set -o errexit
 
 readonly RETRY_INTERVAL=10
+INSTANCES_TO_CHECK=()
 
 function check_ssh_connection()
 {
@@ -30,7 +31,6 @@ function check_ssh_connection()
 }
 
 function get_check_instances() {
-  local instancesToCheck=()
   # Set ssh config for all task role instances
   local taskRoleInstances=(${PAI_TASK_ROLE_INSTANCES//,/ })
   for i in "${taskRoleInstances[@]}"; do
@@ -42,9 +42,8 @@ function get_check_instances() {
       continue
     fi
 
-    instancesToCheck+=("${taskRole}-${index}")
+    INSTANCES_TO_CHECK+=("${taskRole}-${index}")
   done
-  echo "${instancesToCheck}"
 }
 
 function main() {
@@ -55,17 +54,18 @@ function main() {
   echo "Setting ssh barrier MAX_RETRY_COUNT to ${MAX_RETRY_COUNT}, poll interval is ${RETRY_INTERVAL} seconds"
 
   retryCount=0
-  instancesToCheck="$(get_check_instances)"
+  get_check_instances
 
   # set +o errexit because use exitcode to judge ssh connectivity
   set +o errexit
   while true
   do
-    echo "Trying to SSH to instances: ${instancesToCheck[*]}"
+    echo "Trying to SSH to instances: ${INSTANCES_TO_CHECK[*]}"
 
-    instanceFailed=()
+    local instanceFailed=()
     
-    for instance in "${instancesToCheck[@]}"; do
+    for instance in "${INSTANCES_TO_CHECK[@]}"; do
+      echo "check ssh connection for ${instance}"
       check_ssh_connection "$instance"
       if [[ $? != 0 ]]; then
         instanceFailed+=("$instance")
@@ -75,11 +75,11 @@ function main() {
     [[ ${#instanceFailed[@]} = 0 ]] && break
 
     if (( $retryCount >= $MAX_RETRY_COUNT )); then
-      echo "SSH barrier reaches max retry count. Failed instances: ${instancesToCheck[*]} Exit..." >&2
+      echo "SSH barrier reaches max retry count. Failed instances: ${INSTANCES_TO_CHECK[*]} Exit..." >&2
       exit 10
     fi
 
-    instancesToCheck=(${instanceFailed[*]}) 
+    INSTANCES_TO_CHECK=(${instanceFailed[*]}) 
     ((retryCount++))
 
     sleep $RETRY_INTERVAL
@@ -90,3 +90,4 @@ function main() {
 }
 
 main $@
+
