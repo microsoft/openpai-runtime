@@ -65,7 +65,7 @@ function main() {
     local instanceFailed=()
     
     for instance in "${INSTANCES_TO_CHECK[@]}"; do
-      echo "check ssh connectio for ${instance}"
+      echo "check ssh connection for ${instance}"
       check_ssh_connection "$instance"
       if [[ $? != 0 ]]; then
         instanceFailed+=("$instance")
