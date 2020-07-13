@@ -93,7 +93,7 @@ echo "[INFO] Precommands finished"
 echo "[INFO] USER COMMAND START"
 (${RUNTIME_SCRIPT_DIR}/user.sh \
                     2> >(tee -a ${RUNTIME_LOG_DIR}/user.pai.stderr) \
-                    > >(tee -a ${RUNTIME_LOG_DIR}/user.pai.stdout)) > ${RUNTIME_LOG_DIR}/user.pai.all &
+                    > >(tee -a ${RUNTIME_LOG_DIR}/user.pai.stdout)) >> ${RUNTIME_LOG_DIR}/user.pai.all &
 
 USER_PID=$!
 
