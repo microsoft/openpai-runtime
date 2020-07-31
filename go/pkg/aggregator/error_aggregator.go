@@ -425,21 +425,22 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		return data, nil
 	}
 	remainTruncateSize := exitInfoSize - leftSize
+	a.logger.Info("Exit info size is", exitInfoSize, "remain truncate size is", remainTruncateSize)
 
 	if runtimeExitInfo.ErrorLogs != nil {
 		// truncate runtime log first
-		truncatedRuntimeLog, trucatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
+		truncatedRuntimeLog, truncatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
 		runtimeExitInfo.ErrorLogs.Platform = truncatedRuntimeLog
-		remainTruncateSize = remainTruncateSize - trucatedSize
+		remainTruncateSize = remainTruncateSize - truncatedSize
 		if remainTruncateSize <= 0 {
 			data, err := yaml.Marshal(runtimeExitInfo)
 			return data, err
 		}
 
 		// truncate the user log
-		truncatedUserLog, trucatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
+		truncatedUserLog, truncatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
 		runtimeExitInfo.ErrorLogs.User = truncatedUserLog
-		remainTruncateSize = remainTruncateSize - trucatedSize
+		remainTruncateSize = remainTruncateSize - truncatedSize
 
 		if remainTruncateSize <= 0 {
 			data, err := yaml.Marshal(runtimeExitInfo)
@@ -468,6 +469,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		}
 	}
 
+	a.logger.Warning("Failed to truncate", exitInfoSize, "remain truncate size is", remainTruncateSize, "exit info is", runtimeExitInfo)
 	return nil, errors.New("failed to truncate the exit info")
 }
 
