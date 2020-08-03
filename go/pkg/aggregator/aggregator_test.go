@@ -146,7 +146,7 @@ func TestGenerateExitWithEnvInfo(t *testing.T) {
 	assert.Equal(t, exitInfo.MatchedGpuInfo, expectedGpuInfo)
 }
 
-func TestGenerateExitTruncateFail(t *testing.T) {
+func TestGenerateExitInfoWithTruncateFail(t *testing.T) {
 	a, err := initAggregator("../../example/test/user.pai.all.t5", "../../example/test/runtime.pai.error.t1")
 	assert.Nil(t, err)
 

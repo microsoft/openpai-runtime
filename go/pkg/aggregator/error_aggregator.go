@@ -439,12 +439,12 @@ func (a *ErrorAggregator) getMinimalExitSummary(r *RuntimeExitInfo) *RuntimeExit
 	return &ret
 }
 
-func (a *ErrorAggregator) recalculateRemainTruncateSize(r *RuntimeExitInfo, currentSize int, remainSize int) ([]byte, int, error) {
+func (a *ErrorAggregator) recalculateRemainTruncateSize(r *RuntimeExitInfo, targetSize int) ([]byte, int, error) {
 	data, err := yaml.Marshal(r)
 	if err != nil {
-		return nil, remainSize, err
+		return nil, 0, err
 	}
-	return data, remainSize - (currentSize - len(data)), nil
+	return data, len(data) - targetSize, nil
 }
 
 // runtimeExitInfo will be modified in this function
@@ -466,7 +466,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		truncatedRuntimeLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
 		runtimeExitInfo.ErrorLogs.Platform = truncatedRuntimeLog
 		// recalculate the length here since more space will be free after yaml formatted
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
 			return nil, err
 		}
 		if remainTruncateSize <= 0 {
@@ -476,7 +476,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		// truncate the user log
 		truncatedUserLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
 		runtimeExitInfo.ErrorLogs.User = truncatedUserLog
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
 			return nil, err
 		}
 		if remainTruncateSize <= 0 {
@@ -493,7 +493,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 			return data, err
 		}
 		runtimeExitInfo.MatchedPlatformLogString = nil
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
 			return nil, err
 		}
 	}
