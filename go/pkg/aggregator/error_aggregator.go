@@ -455,18 +455,18 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 	}
 
 	exitInfoSize := len(data)
-	leftSize := a.maxAggregateLogSize
-	if exitInfoSize <= leftSize {
+	targetSize := a.maxAggregateLogSize
+	if exitInfoSize <= targetSize {
 		return data, nil
 	}
-	remainTruncateSize := exitInfoSize - leftSize
+	remainTruncateSize := exitInfoSize - targetSize
 
 	if runtimeExitInfo.ErrorLogs != nil {
 		// truncate runtime log first
 		truncatedRuntimeLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
 		runtimeExitInfo.ErrorLogs.Platform = truncatedRuntimeLog
 		// recalculate the length here since more space will be free after yaml formatted
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, targetSize); err != nil {
 			return nil, err
 		}
 		if remainTruncateSize <= 0 {
@@ -476,7 +476,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		// truncate the user log
 		truncatedUserLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
 		runtimeExitInfo.ErrorLogs.User = truncatedUserLog
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, targetSize); err != nil {
 			return nil, err
 		}
 		if remainTruncateSize <= 0 {
@@ -493,7 +493,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 			return data, err
 		}
 		runtimeExitInfo.MatchedPlatformLogString = nil
-		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, leftSize); err != nil {
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, targetSize); err != nil {
 			return nil, err
 		}
 	}
