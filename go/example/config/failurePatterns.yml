@@ -34,3 +34,8 @@
 - patterns:
   - exitCode: 143
   containerExitCode: 143
+
+- containerExitCode: 221
+  patterns:
+  - userLogRegex: "(?msi)tensorflow.*ResourceExhaustedError.*OOM.*"
+  - userLogRegex: "(?i)ran out of memory trying to allocate"

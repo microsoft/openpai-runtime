@@ -214,16 +214,19 @@ func (a *ErrorAggregator) getPatternLoc(regex string, content []byte) ([]int, er
 	return loc, nil
 }
 
-func (a *ErrorAggregator) mergeLogs(lhs []string, rhs []string, matchString string, content string, index int) []string {
+func (a *ErrorAggregator) mergeLogs(lhs []string, rhs []string, match []string, content string, matchLoc []int) []string {
 	var res []string
 	res = append(res, lhs...)
-	if lhs != nil && index > 0 && content[index-1] != '\n' {
-		res[len(res)-1] = lhs[len(lhs)-1] + matchString
+
+	i, l := matchLoc[0], matchLoc[1]
+	if lhs != nil && i > 0 && content[i-1] != '\n' {
+		res[len(res)-1] = lhs[len(lhs)-1] + match[0]
+		res = append(res, match[1:]...)
 	} else {
-		res = append(res, matchString)
+		res = append(res, match...)
 	}
 
-	if e := index + len(matchString); rhs != nil && e < len(content) && content[e] != '\n' {
+	if e := i + l; rhs != nil && e < len(content) && content[e] != '\n' {
 		res[len(res)-1] = res[len(res)-1] + rhs[0]
 		res = append(res, rhs[1:]...)
 	} else {
@@ -239,11 +242,11 @@ func (a *ErrorAggregator) extractNlinesTailLog(conent []byte, maxLogLines int) [
 	}
 	truncatedLog := string(conent[start:])
 	truncatedLogLines := strings.Split(strings.ReplaceAll(truncatedLog, "\r\n", "\n"), "\n")
-	lenth := len(truncatedLogLines)
-	if lenth < maxLogLines {
+	length := len(truncatedLogLines)
+	if length < maxLogLines {
 		return truncatedLogLines
 	}
-	return truncatedLogLines[lenth-maxLogLines:]
+	return truncatedLogLines[length-maxLogLines:]
 }
 
 func (a *ErrorAggregator) extractMatchLog(loc []int, content []byte, maxLogLines int) ([]string, error) {
@@ -272,14 +275,19 @@ func (a *ErrorAggregator) extractMatchLog(loc []int, content []byte, maxLogLines
 	curContent := string(content[startPos:endPos])
 	curContent = strings.ReplaceAll(curContent, "\r\n", "\n")
 
-	i := strings.Index(curContent, matchString)
-	lhsLines := strings.Split(curContent[:i], "\n")
-	rhsLines := strings.Split(curContent[i+len(matchString):], "\n")
+	matchStartIndex := strings.Index(curContent, matchString)
+	lhsLines := strings.Split(curContent[:matchStartIndex], "\n")
+	rhsLines := strings.Split(curContent[matchStartIndex+len(matchString):], "\n")
+	matchLines := strings.Split(matchString, "\n")
 
-	// if the logs behind match string only contains few lines, try to etract more logs before the match string
+	if len(matchLines) >= maxLogLines {
+		return matchLines[len(matchLines)-maxLogLines : len(matchLines)], nil
+	}
+
+	// if the logs behind match string only contains few lines, try to extract more logs before the match string
 	lhsLineOffset := 3
-	if lines := maxLogLines - lhsLineOffset - 1; len(rhsLines) < lines {
-		lhsLineOffset = maxLogLines - len(rhsLines) - 1
+	if lines, stagingLines := maxLogLines-lhsLineOffset, len(rhsLines)+len(matchLines); stagingLines < lines {
+		lhsLineOffset = maxLogLines - stagingLines
 	}
 
 	var lhsStart, rhsEnd int
@@ -287,10 +295,19 @@ func (a *ErrorAggregator) extractMatchLog(loc []int, content []byte, maxLogLines
 		lhsStart = 0
 	}
 
-	if rhsEnd = len(rhsLines) + maxLogLines; rhsEnd > len(rhsLines) {
+	lhsLineNumber := len(lhsLines) - lhsStart
+	if rhsEnd = maxLogLines - lhsLineNumber - len(matchLines); rhsEnd < 0 {
+		rhsEnd = 0
+	}
+	if rhsEnd > len(rhsLines) {
 		rhsEnd = len(rhsLines)
 	}
-	logLines := a.mergeLogs(lhsLines[lhsStart:], rhsLines[:rhsEnd], matchString, curContent, i)
+	logLines := a.mergeLogs(lhsLines[lhsStart:], rhsLines[:rhsEnd], matchLines, curContent,
+		[]int{matchStartIndex, len(matchString)})
+
+	if len(logLines) > maxLogLines {
+		logLines = logLines[len(logLines)-maxLogLines:]
+	}
 	return logLines, nil
 }
 
@@ -298,6 +315,7 @@ func (a *ErrorAggregator) getMatchedLogString(loc []int, log []byte) *string {
 	if loc != nil && len(loc) == 2 {
 		match := log[loc[0]:loc[1]]
 		if len(match) > a.maxMatchLogLen {
+			a.logger.Warning("The size of match log len is", len(match), "more than", a.maxMatchLogLen)
 			match = match[:a.maxMatchLogLen]
 		}
 		return ptrString(string(match))
@@ -404,7 +422,7 @@ func (a *ErrorAggregator) truncateLog(logConent *string, truncateSize int, match
 			truncatedLog := (*logConent)[truncateSize:]
 			return &truncatedLog, logSize - len(truncatedLog)
 		}
-		// try to keep the match string as much as posible
+		// try to keep the match string as much as possible
 		truncatedLog := (*logConent)[matchBeginPos:]
 		remainTruncateSize := truncateSize - matchBeginPos
 		truncatedLog = truncatedLog[:len(truncatedLog)-remainTruncateSize]
@@ -413,6 +431,23 @@ func (a *ErrorAggregator) truncateLog(logConent *string, truncateSize int, match
 	return nil, logSize
 }
 
+func (a *ErrorAggregator) getMinimalExitSummary(r *RuntimeExitInfo) *RuntimeExitInfo {
+	var ret RuntimeExitInfo
+	ret.OriginUserExitCode = r.OriginUserExitCode
+	ret.Exitcode = r.Exitcode
+	ret.MatchedGpuInfo = r.MatchedGpuInfo
+	return &ret
+}
+
+func (a *ErrorAggregator) recalculateRemainTruncateSize(r *RuntimeExitInfo, currentSize int, remainSize int) ([]byte, int, error) {
+	data, err := yaml.Marshal(r)
+	if err != nil {
+		return nil, remainSize, err
+	}
+	return data, remainSize - (currentSize - len(data)), nil
+}
+
+// runtimeExitInfo will be modified in this function
 func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) ([]byte, error) {
 	data, err := yaml.Marshal(runtimeExitInfo)
 	if err != nil {
@@ -425,26 +460,27 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		return data, nil
 	}
 	remainTruncateSize := exitInfoSize - leftSize
-	a.logger.Info("Exit info size is", exitInfoSize, "remain truncate size is", remainTruncateSize)
 
 	if runtimeExitInfo.ErrorLogs != nil {
 		// truncate runtime log first
-		truncatedRuntimeLog, truncatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
+		truncatedRuntimeLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.Platform, remainTruncateSize, runtimeExitInfo.MatchedPlatformLogString)
 		runtimeExitInfo.ErrorLogs.Platform = truncatedRuntimeLog
-		remainTruncateSize = remainTruncateSize - truncatedSize
+		// recalculate the length here since more space will be free after yaml formatted
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+			return nil, err
+		}
 		if remainTruncateSize <= 0 {
-			data, err := yaml.Marshal(runtimeExitInfo)
-			return data, err
+			return data, nil
 		}
 
 		// truncate the user log
-		truncatedUserLog, truncatedSize := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
+		truncatedUserLog, _ := a.truncateLog(runtimeExitInfo.ErrorLogs.User, remainTruncateSize, runtimeExitInfo.MatchedUserLogString)
 		runtimeExitInfo.ErrorLogs.User = truncatedUserLog
-		remainTruncateSize = remainTruncateSize - truncatedSize
-
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+			return nil, err
+		}
 		if remainTruncateSize <= 0 {
-			data, err := yaml.Marshal(runtimeExitInfo)
-			return data, err
+			return data, nil
 		}
 	}
 
@@ -456,8 +492,10 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 			data, err := yaml.Marshal(runtimeExitInfo)
 			return data, err
 		}
-		remainTruncateSize = remainTruncateSize - len(*runtimeExitInfo.MatchedPlatformLogString)
 		runtimeExitInfo.MatchedPlatformLogString = nil
+		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, len(data), remainTruncateSize); err != nil {
+			return nil, err
+		}
 	}
 
 	if runtimeExitInfo.MatchedUserLogString != nil {
@@ -469,8 +507,8 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		}
 	}
 
-	a.logger.Warning("Failed to truncate", exitInfoSize, "remain truncate size is", remainTruncateSize, "exit info is", runtimeExitInfo)
-	return nil, errors.New("failed to truncate the exit info")
+	a.logger.Warning("Failed to truncate, use minmal exit info as return value")
+	return yaml.Marshal(a.getMinimalExitSummary(runtimeExitInfo))
 }
 
 func (a *ErrorAggregator) collectGpuInfo() *gpuInfo {
