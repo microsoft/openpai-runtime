@@ -489,8 +489,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		l := len(*runtimeExitInfo.MatchedPlatformLogString) - remainTruncateSize
 		if l >= 0 {
 			runtimeExitInfo.MatchedPlatformLogString = ptrString((*runtimeExitInfo.MatchedPlatformLogString)[:l])
-			data, err := yaml.Marshal(runtimeExitInfo)
-			return data, err
+			return yaml.Marshal(runtimeExitInfo)
 		}
 		runtimeExitInfo.MatchedPlatformLogString = nil
 		if data, remainTruncateSize, err = a.recalculateRemainTruncateSize(runtimeExitInfo, targetSize); err != nil {
@@ -502,8 +501,7 @@ func (a *ErrorAggregator) truncateExitSummary(runtimeExitInfo *RuntimeExitInfo) 
 		l := len(*runtimeExitInfo.MatchedUserLogString) - remainTruncateSize
 		if l >= 0 {
 			runtimeExitInfo.MatchedUserLogString = ptrString((*runtimeExitInfo.MatchedUserLogString)[:l])
-			data, err := yaml.Marshal(runtimeExitInfo)
-			return data, err
+			return yaml.Marshal(runtimeExitInfo)
 		}
 	}
 
