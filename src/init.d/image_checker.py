@@ -29,8 +29,10 @@ import sys
 import requests
 import yaml
 
+#pylint: disable=wrong-import-position
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-import common.utils as utils  #pylint: disable=wrong-import-position
+from common.exceptions import ImageAuthenticationError, ImageCheckError, ImageNameError
+import common.utils as utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +81,10 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
     Notice: the image checker only works for docker registry which support v2 API and
     enables https. For registry using v1 API or doesn't enable https. This check will passed,
     and wrong image name may cause task hang.
+
+    Image checker will try to check image with best effort. If registry return unexpected
+    code such as 5xx/429, image checker will abort. We only reject when we make sure the image
+    is not exist or authentication failed.
     """
     def __init__(self, job_config, secret):
         prerequisites = job_config["prerequisites"]
@@ -149,10 +155,11 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         resp = requests.get(url,
                             headers=self._basic_auth_headers,
                             params=parameters)
+        if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
+            raise ImageAuthenticationError("Failed to get auth token")
         if not resp.ok:
-            raise RuntimeError(
-                "Failed to get auth token, status code: {}".format(
-                    resp.status_code))
+            raise RuntimeError("Unknown failure with resp code {}".format(
+                resp.status_code))
         body = resp.json()
         self._bearer_auth_headers["Authorization"] = "{} {}".format(
             BEARER_AUTH, body["token"])
@@ -172,18 +179,23 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
     def _login_v2_registry(self, attempt_url) -> None:
         if not self._is_registry_v2_supportted():
             LOGGER.warning(
-                "Registry %s not support v2 api, ignore image check",
+                "Registry %s may not support v2 api, ignore image check",
                 self._registry_uri)
-            return
+            raise RuntimeError("Failed to check registry v2 support")
         resp = requests.head(attempt_url, headers=self._basic_auth_headers)
         if not resp.ok and resp.status_code != http.HTTPStatus.UNAUTHORIZED:
-            LOGGER.error("Failed to login registry, resp code is %d",
-                         resp.status_code)
-            raise RuntimeError("Failed to login registry")
+            LOGGER.error(
+                "Failed to login registry or get auth url, resp code is %d",
+                resp.status_code)
+            raise RuntimeError(
+                "Failed to access registry when trying to login")
         headers = resp.headers
         if "Www-Authenticate" in headers:
             challenge = _parse_auth_challenge(headers["Www-Authenticate"])
             self._get_and_set_token(challenge)
+        elif resp.status_code == http.HTTPStatus.UNAUTHORIZED:
+            raise ImageAuthenticationError("Failed to login registry")
+        raise RuntimeError("Unknown status when trying to login registry")
 
     def _get_normalized_image_info(self) -> dict:
         uri = self._image_uri
@@ -199,7 +211,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         if not re.fullmatch(r"[a-z\-_.0-9]+[\/a-z\-_.0-9]*",
                             repository) or not re.fullmatch(
                                 r"[a-z\-_.0-9]+", tag):
-            raise RuntimeError("image uri {} is invalid".format(
+            raise ImageNameError("image uri {} is invalid".format(
                 self._image_uri))
 
         repo_chunks = uri_chunks[0].split("/")
@@ -211,7 +223,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
     def is_docker_image_accessible(self):
         try:
             image_info = self._get_normalized_image_info()
-        except RuntimeError:
+        except ImageNameError:
             LOGGER.error("docker image uri: %s is invalid",
                          self._image_uri,
                          exc_info=True)
@@ -221,8 +233,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                                                 **image_info)
         try:
             self._login_v2_registry(url)
-        except RuntimeError:
-            LOGGER.error("login failed, username or password incorrect",
+        except ImageCheckError:
+            LOGGER.error("Login failed, username or password is incorrect",
                          exc_info=True)
             return False
 
@@ -234,7 +246,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             LOGGER.info("image %s found in registry", self._image_uri)
             return True
         if resp.status_code == http.HTTPStatus.NOT_FOUND or resp.status_code == http.HTTPStatus.UNAUTHORIZED:
-            LOGGER.info(
+            LOGGER.error(
                 "image %s not found or user unauthorized, registry is %s, resp code is %d",
                 self._image_uri, self._registry_uri, resp.status_code)
             return False
