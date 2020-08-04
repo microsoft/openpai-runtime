@@ -83,8 +83,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
     and wrong image name may cause task hang.
 
     Image checker will try to check image with best effort. If registry return unexpected
-    code such as 5xx/429, image checker will abort. We only reject when we make sure the image
-    is not exist or authentication failed.
+    code such as 5xx/429, image checker will abort. We only failed the image checker when we make
+    sure the image is not exist or authentication failed.
     """
     def __init__(self, job_config, secret):
         prerequisites = job_config["prerequisites"]

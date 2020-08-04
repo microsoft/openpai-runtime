@@ -59,6 +59,7 @@ def prepare_image_check(job_config_path):
                 )
                 func(self, *args, **kwargs)
             del os.environ["PAI_CURRENT_TASK_ROLE_NAME"]
+            responses.reset()
 
         return wrapper
 
@@ -152,6 +153,15 @@ class TestImageChecker(unittest.TestCase):
     def test_image_with_auth(self):
         add_official_registry_v2_response(self.image_info)
         self.assertTrue(self.image_checker.is_docker_image_accessible())
+
+    @prepare_image_check("docker_image_auth.yaml")
+    @responses.activate
+    def test_image_with_unknown_ret(self):
+        responses.add(responses.HEAD,
+                      "https://index.docker.io/v2/",
+                      status=http.HTTPStatus.TOO_MANY_REQUESTS)
+        self.assertRaises(RuntimeError,
+                          self.image_checker.is_docker_image_accessible)
 
     @patch.object(ImageChecker, "__init__")
     def test_is_use_default_domain(self, mock):
