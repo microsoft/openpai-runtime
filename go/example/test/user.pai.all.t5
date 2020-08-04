@@ -1,0 +1,18 @@
+2020-07-31 07:49:18.909070: W tensorflow/core/common_runtime/bfc_allocator.cc:319] ********___*****________***********************************************************_________________
+2020-07-31 07:49:18.909117: W tensorflow/core/framework/op_kernel.cc:1502] OP_REQUIRES failed at softmax_op_gpu.cu.cc:156 : Resource exhausted: OOM when allocating tensor with shape[248,12,410,410] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/client/session.py", line 1356, in _do_call
+    return fn(*args)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/client/session.py", line 1341, in _run_fn
+    options, feed_dict, fetch_list, target_list, run_metadata)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/client/session.py", line 1429, in _call_tf_sessionrun
+    run_metadata)
+tensorflow.python.framework.errors_impl.ResourceExhaustedError: [_Derived_]{{function_node cluster_0}} OOM when allocating tensor with shape[248,12,410,410] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
+	 [[{{node meta/encoder/layer_0/attention/self/Softmax}}]]
+Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info.
+
+	 [[cluster_0_1/partitioned_call]]
+Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info.
+
+	 [[cluster_0_1/merge_oidx_0/_663]]
+Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info.
