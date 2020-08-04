@@ -33,6 +33,7 @@ sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/init.d"))
 from image_checker import ImageChecker
 from common.utils import init_logger
+from common.exceptions import ImageNameError
 # pylint: enable=wrong-import-position
 
 PACKAGE_DIRECTORY_COM = os.path.dirname(os.path.abspath(__file__))
@@ -213,7 +214,7 @@ class TestImageChecker(unittest.TestCase):
 
         for uri in invalid_docker_hub_uris:
             mock_image_checker._image_uri = uri
-            self.assertRaises(RuntimeError,
+            self.assertRaises(ImageNameError,
                               mock_image_checker._get_normalized_image_info)
 
     @patch.object(ImageChecker, "__init__")

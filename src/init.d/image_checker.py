@@ -183,18 +183,18 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 self._registry_uri)
             raise RuntimeError("Failed to check registry v2 support")
         resp = requests.head(attempt_url, headers=self._basic_auth_headers)
-        if not resp.ok and resp.status_code != http.HTTPStatus.UNAUTHORIZED:
-            LOGGER.error(
-                "Failed to login registry or get auth url, resp code is %d",
-                resp.status_code)
-            raise RuntimeError(
-                "Failed to access registry when trying to login")
+        if resp.ok:
+            return
         headers = resp.headers
-        if "Www-Authenticate" in headers:
+        if resp.status_code == http.HTTPStatus.UNAUTHORIZED and "Www-Authenticate" in headers:
             challenge = _parse_auth_challenge(headers["Www-Authenticate"])
             self._get_and_set_token(challenge)
-        elif resp.status_code == http.HTTPStatus.UNAUTHORIZED:
+            return
+        if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
             raise ImageAuthenticationError("Failed to login registry")
+        LOGGER.error(
+            "Failed to login registry or get auth url, resp code is %d",
+            resp.status_code)
         raise RuntimeError("Unknown status when trying to login registry")
 
     def _get_normalized_image_info(self) -> dict:
