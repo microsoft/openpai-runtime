@@ -1,3 +1,7 @@
+class UnknownError(Exception):
+    pass
+
+
 class ImageCheckError(Exception):
     pass
 

@@ -33,7 +33,7 @@ sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/init.d"))
 from image_checker import ImageChecker
 from common.utils import init_logger
-from common.exceptions import ImageNameError
+from common.exceptions import ImageNameError, UnknownError
 # pylint: enable=wrong-import-position
 
 PACKAGE_DIRECTORY_COM = os.path.dirname(os.path.abspath(__file__))
@@ -160,7 +160,7 @@ class TestImageChecker(unittest.TestCase):
         responses.add(responses.HEAD,
                       "https://index.docker.io/v2/",
                       status=http.HTTPStatus.TOO_MANY_REQUESTS)
-        self.assertRaises(RuntimeError,
+        self.assertRaises(UnknownError,
                           self.image_checker.is_docker_image_accessible)
 
     @patch.object(ImageChecker, "__init__")

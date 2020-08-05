@@ -31,7 +31,7 @@ import yaml
 
 #pylint: disable=wrong-import-position
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from common.exceptions import ImageAuthenticationError, ImageCheckError, ImageNameError
+from common.exceptions import ImageAuthenticationError, ImageCheckError, ImageNameError, UnknownError
 import common.utils as utils
 
 LOGGER = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
             raise ImageAuthenticationError("Failed to get auth token")
         if not resp.ok:
-            raise RuntimeError("Unknown failure with resp code {}".format(
+            raise UnknownError("Unknown failure with resp code {}".format(
                 resp.status_code))
         body = resp.json()
         self._bearer_auth_headers["Authorization"] = "{} {}".format(
@@ -181,7 +181,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             LOGGER.warning(
                 "Registry %s may not support v2 api, ignore image check",
                 self._registry_uri)
-            raise RuntimeError("Failed to check registry v2 support")
+            raise UnknownError("Failed to check registry v2 support")
         resp = requests.head(attempt_url, headers=self._basic_auth_headers)
         if resp.ok:
             return
@@ -195,7 +195,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         LOGGER.error(
             "Failed to login registry or get auth url, resp code is %d",
             resp.status_code)
-        raise RuntimeError("Unknown status when trying to login registry")
+        raise UnknownError("Unknown status when trying to login registry")
 
     def _get_normalized_image_info(self) -> dict:
         uri = self._image_uri
@@ -252,7 +252,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             return False
         LOGGER.warning("resp with code %d, ignore image check",
                        resp.status_code)
-        raise RuntimeError("Unknown response from registry")
+        raise UnknownError("Unknown response from registry")
 
 
 def main():
