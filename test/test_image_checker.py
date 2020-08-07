@@ -33,6 +33,7 @@ sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/init.d"))
 from image_checker import ImageChecker
 from common.utils import init_logger
+from common.exceptions import ImageNameError, UnknownError
 # pylint: enable=wrong-import-position
 
 PACKAGE_DIRECTORY_COM = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +59,7 @@ def prepare_image_check(job_config_path):
                 )
                 func(self, *args, **kwargs)
             del os.environ["PAI_CURRENT_TASK_ROLE_NAME"]
+            responses.reset()
 
         return wrapper
 
@@ -152,6 +154,15 @@ class TestImageChecker(unittest.TestCase):
         add_official_registry_v2_response(self.image_info)
         self.assertTrue(self.image_checker.is_docker_image_accessible())
 
+    @prepare_image_check("docker_image_auth.yaml")
+    @responses.activate
+    def test_image_with_unknown_ret(self):
+        responses.add(responses.HEAD,
+                      "https://index.docker.io/v2/",
+                      status=http.HTTPStatus.TOO_MANY_REQUESTS)
+        self.assertRaises(UnknownError,
+                          self.image_checker.is_docker_image_accessible)
+
     @patch.object(ImageChecker, "__init__")
     def test_is_use_default_domain(self, mock):
         mock.return_value = None
@@ -213,7 +224,7 @@ class TestImageChecker(unittest.TestCase):
 
         for uri in invalid_docker_hub_uris:
             mock_image_checker._image_uri = uri
-            self.assertRaises(RuntimeError,
+            self.assertRaises(ImageNameError,
                               mock_image_checker._get_normalized_image_info)
 
     @patch.object(ImageChecker, "__init__")
