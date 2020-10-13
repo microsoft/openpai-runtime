@@ -87,7 +87,7 @@ def add_official_registry_v2_response(image_info, options=None):
         "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{repo}:pull"
         .format(**image_info),
         status=http.HTTPStatus.OK,
-        json={"token": "BearerToken"})
+        json={"access_token": "BearerToken"})
 
 
 def add_azure_registry_v2_response(image_info):
@@ -125,7 +125,7 @@ def add_azure_registry_v2_token_response(image_info):
         "https://openpai.azurecr.io/oauth2/token?service=openpai.azurecr.io".
         format(**image_info),
         status=http.HTTPStatus.OK,
-        json={"token": "BearerToken"})
+        json={"access_token": "BearerToken"})
 
 
 def official_registry_request_callback(request, repo, options):

@@ -165,7 +165,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 resp.status_code))
         body = resp.json()
         self._bearer_auth_headers["Authorization"] = "{} {}".format(
-            BEARER_AUTH, body["token"])
+            BEARER_AUTH, body["access_token"])
         self._registry_auth_type = BEARER_AUTH
 
     def _is_registry_v2_supportted(self) -> bool:
