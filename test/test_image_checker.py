@@ -93,12 +93,39 @@ def add_official_registry_v2_response(image_info, options=None):
 def add_azure_registry_v2_response(image_info):
     responses.add(responses.HEAD,
                   "https://openpai.azurecr.io/v2/",
-                  status=http.HTTPStatus.OK)
-    responses.add(
+                  status=http.HTTPStatus.UNAUTHORIZED,
+                  headers={
+                      "Www-Authenticate":
+                      "Basic realm=\"Azure Container Registry\""
+                  })
+    responses.add_callback(
         responses.HEAD,
         "https://openpai.azurecr.io/v2/{repo}/manifests/{tag}".format(
             **image_info),
-        status=http.HTTPStatus.OK)
+        callback=partial(azure_registry_request_callback))
+
+
+def add_azure_registry_v2_token_response(image_info):
+    responses.add(
+        responses.HEAD,
+        "https://openpai.azurecr.io/v2/",
+        status=http.HTTPStatus.UNAUTHORIZED,
+        headers={
+            "Www-Authenticate":
+            "Bearer realm=\"https://openpai.azurecr.io/oauth2/token\",service=\"openpai.azurecr.io\""
+        })
+    responses.add_callback(
+        responses.HEAD,
+        "https://openpai.azurecr.io/v2/{repo}/manifests/{tag}".format(
+            **image_info),
+        callback=partial(azure_registry_token_request_callback,
+                         repo=image_info["repo"]))
+    responses.add(
+        responses.GET,
+        "https://openpai.azurecr.io/oauth2/token?service=openpai.azurecr.io".
+        format(**image_info),
+        status=http.HTTPStatus.OK,
+        json={"token": "BearerToken"})
 
 
 def official_registry_request_callback(request, repo, options):
@@ -114,6 +141,29 @@ def official_registry_request_callback(request, repo, options):
         "Www-Authenticate":
         ("Bearer realm=\"https://auth.docker.io/token\","
          "service=\"registry.docker.io\",scope=\"{}\"".format(scope))
+    }
+    return (http.HTTPStatus.UNAUTHORIZED, headers, None)
+
+
+def azure_registry_request_callback(request):
+    headers = request.headers
+    if "Authorization" in headers and headers["Authorization"].startswith(
+            "Basic"):
+        return (http.HTTPStatus.OK, {}, None)
+    headers = {"Www-Authenticate": "Basic realm=\"Azure Container Registry\""}
+    return (http.HTTPStatus.UNAUTHORIZED, headers, None)
+
+
+def azure_registry_token_request_callback(request, repo):
+    headers = request.headers
+    if "Authorization" in headers and headers["Authorization"].startswith(
+            "Bearer"):
+        return (http.HTTPStatus.OK, {}, None)
+    scope = "repository:{}:pull".format(repo)
+    headers = {
+        "Www-Authenticate":
+        ("Bearer realm=\"https://openpai.azurecr.io/oauth2/token\","
+         "service=\"openpai.azurecr.io\",scope=\"{}\"".format(scope))
     }
     return (http.HTTPStatus.UNAUTHORIZED, headers, None)
 
@@ -147,6 +197,11 @@ class TestImageChecker(unittest.TestCase):
     def test_acr_image(self):
         add_azure_registry_v2_response(self.image_info)
         self.assertTrue(self.image_checker.is_docker_image_accessible())
+
+    @prepare_image_check("docker_image_acr_registry.yaml")
+    @responses.activate
+    def test_acr_image_with_token(self):
+        pass
 
     @prepare_image_check("docker_image_auth.yaml")
     @responses.activate
