@@ -62,16 +62,18 @@ def _get_registry_uri(uri) -> str:
 
 # Parse the challenge field, refer to: https://tools.ietf.org/html/rfc6750#section-3
 def _parse_auth_challenge(challenge) -> dict:
-    if not challenge.strip().startswith(BEARER_AUTH):
+    if not challenge.strip().startswith((BASIC_AUTH, BEARER_AUTH)):
         LOGGER.info("Challenge not supported, ignore this")
         return {}
 
-    chunks = challenge.strip()[len(BEARER_AUTH):].split(",")
-    challenge_dir = {}
+    auth_type = BASIC_AUTH if challenge.strip().startswith(
+        BASIC_AUTH) else BEARER_AUTH
+    challenge_dict = {auth_type: {}}
+    chunks = challenge.strip()[len(auth_type):].split(",")
     for chunk in chunks:
         pair = chunk.strip().split("=")
-        challenge_dir[pair[0]] = pair[1].strip("\"")
-    return challenge_dir
+        challenge_dict[auth_type][pair[0]] = pair[1].strip("\"")
+    return challenge_dict
 
 
 class ImageChecker():  #pylint: disable=too-few-public-methods
@@ -144,13 +146,14 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                                   for ch in self._image_uri[:index])
 
     def _get_and_set_token(self, challenge) -> None:
-        if not challenge:
+        if not challenge or BEARER_AUTH not in challenge:
+            LOGGER.info("Not using bearer token, use basic auth")
             return
-        if "realm" not in challenge:
+        if "realm" not in challenge[BEARER_AUTH]:
             LOGGER.warning("realm not in challenge, use basic auth")
             return
-        url = challenge["realm"]
-        parameters = copy.deepcopy(challenge)
+        url = challenge[BEARER_AUTH]["realm"]
+        parameters = copy.deepcopy(challenge[BEARER_AUTH])
         del parameters["realm"]
         resp = requests.get(url,
                             headers=self._basic_auth_headers,
@@ -162,14 +165,12 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 resp.status_code))
         body = resp.json()
         self._bearer_auth_headers["Authorization"] = "{} {}".format(
-            BEARER_AUTH, body["token"])
+            BEARER_AUTH, body["access_token"])
         self._registry_auth_type = BEARER_AUTH
 
     def _is_registry_v2_supportted(self) -> bool:
         try:
-            resp = requests.head(self._registry_uri,
-                                 headers=self._basic_auth_headers,
-                                 timeout=10)
+            resp = requests.head(self._registry_uri, timeout=10)
             if resp.ok or resp.status_code == http.HTTPStatus.UNAUTHORIZED:
                 return True
             return False
@@ -182,7 +183,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 "Registry %s may not support v2 api, ignore image check",
                 self._registry_uri)
             raise UnknownError("Failed to check registry v2 support")
-        resp = requests.head(attempt_url, headers=self._basic_auth_headers)
+        resp = requests.head(attempt_url)
         if resp.ok:
             return
         headers = resp.headers
