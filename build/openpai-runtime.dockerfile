@@ -46,10 +46,9 @@ RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
   mv ${PROJECT_DIR}/dist/runtime/ ${INSTALL_DIR}
 
 RUN wget https://cr.yp.to/daemontools/daemontools-0.76.tar.gz && \
-  tar xzvf https://cr.yp.to/daemontools/daemontools-0.76.tar.gz
-RUN cd admin/daemontools-0.76 && sed -i 's%$% -include /usr/include/errno.h%g' conf-cc && \
-  ./package/compile
-COPY ./command/multilog ${INSTALL_DIR}
+  tar xzvf daemontools-0.76.tar.gz
+RUN cd admin/daemontools-0.76 && sed -i 's%$% -include /usr/include/errno.h%g' src/conf-cc && \
+  ./package/compile && cp ./command/multilog ${INSTALL_DIR}
 
 FROM python:3.7-alpine
 
@@ -66,7 +65,7 @@ WORKDIR /kube-runtime/src
 
 COPY src/ ./
 COPY --from=frameworkcontroller/frameworkbarrier:v0.8.0 $BARRIER_DIR/frameworkbarrier ./init.d
-COPY --from=builder ${INSTALL_DIR}/* ./runtime.d
+COPY --from=builder ${INSTALL_DIR}/* ./runtime.d/
 RUN chmod -R +x ./
 
 # This line should be removed after using k8s client to interact with api server
