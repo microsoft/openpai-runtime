@@ -31,6 +31,9 @@ RUNTIME_SCRIPT_DIR=${RUNTIME_WORK_DIR}/runtime.d
 RUNTIME_LOG_DIR=${RUNTIME_WORK_DIR}/logs/${FC_POD_UID}
 PATTERN_FILE=${RUNTIME_SCRIPT_DIR}/runtime-exit-spec.yaml
 
+LOCAL_LOG_MAX_SIZE=268435456 # 256MB
+LOCAL_LOG_MAX_FILES=2
+
 # please refer to rest-server/src/models/v2/job/k8s.js
 TERMINATION_MESSAGE_PATH=/tmp/pai-termination-log
 
@@ -91,13 +94,18 @@ echo "[INFO] Precommands finished"
 # execute user commands
 # priority=100
 echo "[INFO] USER COMMAND START"
-(${RUNTIME_SCRIPT_DIR}/user.sh \
-  2> >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stderr) | tee -a ${RUNTIME_LOG_DIR}/user.pai.all > &2) \
-  > >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stdout) | tee -a ${RUNTIME_LOG_DIR}/user.pai.all)) &
-
+# Keep 256MB logs
+mkfifo log_pipe
+${RUNTIME_SCRIPT_DIR}/user.sh \
+  2> >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stderr s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES}) | tee -a log_pipe >&2) \
+  > >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stdout s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES}) | tee -a log_pipe) &
 USER_PID=$!
 
+${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-all s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES} < log_pipe &
+LOGGER_PID=$!
+
 wait ${USER_PID}
+wait ${LOGGER_PID}
 
 # synchronize cached writes to disk
 sync
