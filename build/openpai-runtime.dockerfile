@@ -47,7 +47,7 @@ RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
 
 RUN wget https://untroubled.org/daemontools-encore/daemontools-encore-1.10.tar.gz && \
   tar xzvf daemontools-encore-1.10.tar.gz
-RUN cd daemontools-encore-1.10 && && sed -i 's/gcc -s/gcc -s -static/g' conf-ld && make && \
+RUN cd daemontools-encore-1.10 && sed -i 's/gcc -s/gcc -s -static/g' conf-ld && make && \
   cp multilog ${INSTALL_DIR}
 
 FROM python:3.7-alpine
