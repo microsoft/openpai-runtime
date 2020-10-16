@@ -95,13 +95,14 @@ echo "[INFO] Precommands finished"
 # priority=100
 echo "[INFO] USER COMMAND START"
 # Keep 256MB logs
-mkfifo log_pipe
+LOG_PIPE=${RUNTIME_WORK_DIR}/runtime.d/log_pip
+mkfifo ${LOG_PIPE}
 ${RUNTIME_SCRIPT_DIR}/user.sh \
-  2> >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stderr s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES}) | tee -a log_pipe >&2) \
-  > >(tee >(${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-stdout s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES}) | tee -a log_pipe) &
+  2> >(tee >(${RUNTIME_SCRIPT_DIR}/multilog s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES} ${RUNTIME_LOG_DIR}/user-stderr) | tee -a ${LOG_PIPE} >&2) \
+  > >(tee >(${RUNTIME_SCRIPT_DIR}/multilog s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES} ${RUNTIME_LOG_DIR}/user-stdout) | tee -a ${LOG_PIPE}) &
 USER_PID=$!
 
-${RUNTIME_SCRIPT_DIR}/multilog ${RUNTIME_LOG_DIR}/user-all s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES} < log_pipe &
+${RUNTIME_SCRIPT_DIR}/multilog s${LOCAL_LOG_MAX_SIZE} n${LOCAL_LOG_MAX_FILES} ${RUNTIME_LOG_DIR}/user-all < ${LOG_PIPE} &
 LOGGER_PID=$!
 
 wait ${USER_PID}
