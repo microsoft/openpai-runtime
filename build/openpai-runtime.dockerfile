@@ -45,10 +45,10 @@ COPY go/ ${PROJECT_DIR}
 RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
   mv ${PROJECT_DIR}/dist/runtime/ ${INSTALL_DIR}
 
-RUN wget https://cr.yp.to/daemontools/daemontools-0.76.tar.gz && \
-  tar xzvf daemontools-0.76.tar.gz
-RUN cd admin/daemontools-0.76 && sed -i 's%$% -include /usr/include/errno.h%g' src/conf-cc && \
-  ./package/compile && cp ./command/multilog ${INSTALL_DIR}
+RUN wget https://untroubled.org/daemontools-encore/daemontools-encore-1.10.tar.gz && \
+  tar xzvf daemontools-encore-1.10.tar.gz
+RUN cd daemontools-encore-1.10 && make && \
+  cp multilog ${INSTALL_DIR}
 
 FROM python:3.7-alpine
 
