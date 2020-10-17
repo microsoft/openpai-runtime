@@ -1,0 +1,5 @@
+kubernetes
+pyyaml
+requests
+jinja2
+pystache
