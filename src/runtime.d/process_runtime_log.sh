@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (c) Microsoft Corporation
 # All rights reserved.
@@ -21,10 +21,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-RUNTIME_WORK_DIR=/usr/local/pai
-RUNTIME_SCRIPT_DIR=${RUNTIME_WORK_DIR}/runtime.d
-RUNTIME_LOG_DIR=${RUNTIME_WORK_DIR}/logs/${FC_POD_UID}
+RUNTIME_LOG_FILE=$1
 
-export PAI_WORK_DIR="$(pwd)"
-
-${RUNTIME_SCRIPT_DIR}/runtime_entry.sh
+while read line; do
+  echo "[$(date)] [openpai-runtime] ${line}" | tee -a RUNTIME_LOG_FILE > &2
+done
