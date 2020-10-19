@@ -57,10 +57,6 @@ function exit_handler()
     exit 0
   fi
 
-  if [[ ! -f ${RUNTIME_LOG_DIR}/user.pai.all ]]; then
-    touch ${RUNTIME_LOG_DIR}/user.pai.all
-  fi
-
   if [[ ! -f ${RUNTIME_LOG} ]]; then
     touch ${RUNTIME_LOG}
   fi
@@ -68,7 +64,7 @@ function exit_handler()
   set +o errexit
   # genergate aggregated exit info
   ${RUNTIME_SCRIPT_DIR}/exithandler ${USER_EXIT_CODE} \
-                                    ${RUNTIME_LOG_DIR}/user.pai.all \
+                                    ${USER_ALL_LOG_DIR}/current \
                                     ${RUNTIME_LOG} \
                                     ${TERMINATION_MESSAGE_PATH} ${PATTERN_FILE} | \
                                     ${PROCESS_RUNTIME_LOG} ${RUNTIME_LOG}
