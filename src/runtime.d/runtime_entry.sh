@@ -38,7 +38,7 @@ LOCAL_LOG_MAX_FILES=2
 # please refer to rest-server/src/models/v2/job/k8s.js
 TERMINATION_MESSAGE_PATH=/tmp/pai-termination-log
 
-RUNTIME_LOG=${RUNTIME_LOG_DIR}/runtime.pai
+RUNTIME_LOG=${RUNTIME_LOG_DIR}/runtime.log
 PROCESS_RUNTIME_LOG=${RUNTIME_WORK_DIR}/runtime.d/process_runtime_log.sh
 
 function log()
