@@ -24,5 +24,5 @@ set -o pipefail
 RUNTIME_LOG_FILE=$1
 
 while read line; do
-  echo "[$(date)] [openpai-runtime] ${line}" | tee -a RUNTIME_LOG_FILE > &2
+  echo "[$(date)] [openpai-runtime] ${line}" | tee -a ${RUNTIME_LOG_FILE} >&2
 done
