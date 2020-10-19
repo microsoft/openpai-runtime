@@ -1,2 +1,2 @@
-pylint
-responses
+pylint==0.12.0
+responses==2.6.0
