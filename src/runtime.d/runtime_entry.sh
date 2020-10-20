@@ -61,6 +61,9 @@ function exit_handler()
     touch ${RUNTIME_LOG}
   fi
 
+  # synchronize cached writes to disk
+  sync
+
   # Deal with log rotate case. Merge current log with rotated log
   # if current log size is too small
   local USER_LOG_FILE=${USER_ALL_LOG_DIR}/current
