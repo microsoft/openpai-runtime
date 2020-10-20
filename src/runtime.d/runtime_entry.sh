@@ -61,10 +61,24 @@ function exit_handler()
     touch ${RUNTIME_LOG}
   fi
 
+  # Deal with log rotate case. Merge current log with rotated log
+  # if current log size is too small
+  local USER_LOG_FILE=${USER_ALL_LOG_DIR}/current
+  local LOG_FILE_SIZE=$(wc -c ${USER_LOG_FILE} | awk '{print $1}')
+  local MIN_LOG_SIZE=$(( 16*1024 )) # 16KB
+  local ROTATED_LOG_FILE=$(find ${USER_ALL_LOG_DIR} -name @*.s -print -quit)
+
+  if [ -f ${ROTATED_LOG_FILE} ] && (( LOG_FILE_SIZE < ${MIN_LOG_SIZE} )); then
+    mkdir -p ${RUNTIME_WORK_DIR}/tmp
+    tail -c 16K ${ROTATED_LOG_FILE} > ${RUNTIME_WORK_DIR}/tmp/user-log
+    cat ${USER_LOG_FILE} >> ${RUNTIME_WORK_DIR}/tmp/user-log
+    USER_LOG_FILE=${RUNTIME_WORK_DIR}/tmp/user-log
+  fi
+
   set +o errexit
   # genergate aggregated exit info
   ${RUNTIME_SCRIPT_DIR}/exithandler ${USER_EXIT_CODE} \
-                                    ${USER_ALL_LOG_DIR}/current \
+                                    ${USER_LOG_FILE} \
                                     ${RUNTIME_LOG} \
                                     ${TERMINATION_MESSAGE_PATH} ${PATTERN_FILE} | \
                                     ${PROCESS_RUNTIME_LOG} ${RUNTIME_LOG}
