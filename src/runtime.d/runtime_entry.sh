@@ -32,7 +32,7 @@ RUNTIME_LOG_DIR=${RUNTIME_WORK_DIR}/logs/${FC_POD_UID}
 PATTERN_FILE=${RUNTIME_SCRIPT_DIR}/runtime-exit-spec.yaml
 
 # Keep 256MB logs
-LOCAL_LOG_MAX_SIZE=268435456 # 256MB
+LOCAL_LOG_MAX_SIZE=$(( 256*1024*1024 )) # 256MB
 LOCAL_LOG_MAX_FILES=2
 
 # please refer to rest-server/src/models/v2/job/k8s.js
