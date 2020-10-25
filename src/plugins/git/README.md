@@ -12,4 +12,5 @@ extras:
         repo: <git repo>
         options:
         - <git clone options>
+        clone_dir: <clone dir>
 ```

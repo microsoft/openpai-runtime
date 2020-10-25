@@ -25,3 +25,4 @@ extras:
         repo: https://github.com/microsoft/openpai-runtime.git
         options:
         - --depth 1
+        clone_dir: /code
