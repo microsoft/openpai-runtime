@@ -91,7 +91,7 @@ class TestRuntime(unittest.TestCase):
         commands = [[], []]
         initializer.init_plugins(jobconfig, commands, "../src/plugins", ".",
                                  "worker")
-        repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../code")
+        repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/code")
         self.assertTrue(os.path.exists(repo_local_path))
         shutil.rmtree(repo_local_path, ignore_errors=True)
 

@@ -34,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 def main():
     LOGGER.info("Preparing git runtime plugin")
     [plugin_config, _, _] = plugin_init()
-    repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../code")
+    repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../code")
 
     parameters = plugin_config.get("parameters")
     if not parameters or "repo" not in parameters:
