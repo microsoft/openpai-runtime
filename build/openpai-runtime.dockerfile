@@ -56,16 +56,18 @@ RUN mkdir -p /opt/package_cache
 COPY --from=ubuntu_16_04_cache /package_cache /opt/package_cache/
 COPY --from=ubuntu_18_04_cache /package_cache /opt/package_cache/
 
-RUN pip install kubernetes pyyaml requests jinja2 pystache
-
 ENV INSTALL_DIR=/opt/kube-runtime
 ARG BARRIER_DIR=/opt/frameworkcontroller/frameworkbarrier
 
 WORKDIR /kube-runtime/src
 
 COPY src/ ./
-COPY --from=frameworkcontroller/frameworkbarrier:v0.8.0 $BARRIER_DIR/frameworkbarrier ./init.d
-COPY --from=builder ${INSTALL_DIR}/* ./runtime.d/
+COPY requirements.txt ./
+
+COPY --from=frameworkcontroller/frameworkbarrier:v0.9.0 $BARRIER_DIR/frameworkbarrier ./init.d
+COPY --from=builder ${INSTALL_DIR}/* ./runtime.d
+
+RUN pip install -r requirements.txt
 RUN chmod -R +x ./
 
 # This line should be removed after using k8s client to interact with api server
