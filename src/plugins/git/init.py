@@ -29,26 +29,34 @@ from plugins.plugin_utils import plugin_init, PluginHelper  #pylint: disable=wro
 
 LOGGER = logging.getLogger(__name__)
 
+
 # backoff retry, max wait time set to 5 mins
-@backoff.on_exception(backoff.expo, GitCommandError, max_tries=10, max_value=300)
+@backoff.on_exception(backoff.expo,
+                      GitCommandError,
+                      max_tries=10,
+                      max_value=300)
 def main():
     LOGGER.info("Preparing git runtime plugin")
     [plugin_config, pre_script, _] = plugin_init()
     plugin_helper = PluginHelper(plugin_config)
 
-    repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../code")
+    repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "../../code")
     parameters = plugin_config.get("parameters")
-    if not parameters or "repo" not in parameters:
+    if not parameters or "repo_uri" not in parameters:
         LOGGER.error("Can not find repo in runtime plugin")
         sys.exit(1)
     if "options" in parameters:
-        Repo.clone_from(parameters["repo"], repo_local_path, multi_options=parameters["options"])
+        Repo.clone_from(parameters["repo_uri"],
+                        repo_local_path,
+                        multi_options=parameters["options"])
     else:
-        Repo.clone_from(parameters["repo"], repo_local_path)
+        Repo.clone_from(parameters["repo_uri"], repo_local_path)
     if "clone_dir" in parameters:
-        plugin_helper.inject_commands(
-            ["mkdir -p {}".format(parameters["clone_dir"]),
-             "mv -f {}/* {}".format(repo_local_path, parameters["clone_dir"])], pre_script)
+        plugin_helper.inject_commands([
+            "mkdir -p {}".format(parameters["clone_dir"]),
+            "mv -f {}/* {}".format(repo_local_path, parameters["clone_dir"])
+        ], pre_script)
 
 
 if __name__ == "__main__":
