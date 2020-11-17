@@ -60,8 +60,8 @@ class TestRuntime(unittest.TestCase):
             with open(job_path, 'rt') as f:
                 jobconfig = yaml.safe_load(f)
         commands = [[], []]
-        initializer.init_plugins(jobconfig, commands, "../src/plugins", ".",
-                                 "worker")
+        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
+                                 ".", "worker")
 
     def test_ssh_plugin(self):
         job_path = "ssh_test_job.yaml"
@@ -69,8 +69,9 @@ class TestRuntime(unittest.TestCase):
             with open(job_path, 'rt') as f:
                 jobconfig = yaml.safe_load(f)
         commands = [[], []]
-        initializer.init_plugins(jobconfig, commands, "../src/plugins", ".",
-                                 "worker")
+        initializer.init_plugins(
+            jobconfig, {"userssh": "ssh-rsa AAAAB3N/cTbWGQZtN1pai-ssh"},
+            commands, "../src/plugins", ".", "worker")
 
     def test_ssh_plugin_barrier(self):
         job_path = "sshbarrier_test_job.yaml"
@@ -78,11 +79,11 @@ class TestRuntime(unittest.TestCase):
             with open(job_path, 'rt') as f:
                 jobconfig = yaml.safe_load(f)
         commands = [[], []]
-        initializer.init_plugins(jobconfig, commands, "../src/plugins", ".",
-                                 "master")
+        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
+                                 ".", "master")
         commands = [[], []]
-        initializer.init_plugins(jobconfig, commands, "../src/plugins", ".",
-                                 "worker")
+        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
+                                 ".", "worker")
 
     def test_git_plugin(self):
         job_path = "git_repo_test_job.yaml"

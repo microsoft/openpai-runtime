@@ -39,11 +39,16 @@ FROM golang:1.13.8-alpine as builder
 ENV PROJECT_DIR=/src/
 ENV INSTALL_DIR=/opt/kube-runtime
 
-RUN apk update && apk add --no-cache bash && \
+RUN apk update && apk add --no-cache bash alpine-sdk && \
   mkdir -p ${PROJECT_DIR} ${INSTALL_DIR}
 COPY go/ ${PROJECT_DIR}
 RUN ${PROJECT_DIR}/build/runtime/go-build.sh && \
   mv ${PROJECT_DIR}/dist/runtime/ ${INSTALL_DIR}
+
+RUN wget https://untroubled.org/daemontools-encore/daemontools-encore-1.10.tar.gz && \
+  tar xzvf daemontools-encore-1.10.tar.gz
+RUN cd daemontools-encore-1.10 && sed -i 's/gcc -s/gcc -s -static/g' conf-ld && make && \
+  cp multilog ${INSTALL_DIR}
 
 FROM python:3.7-alpine
 

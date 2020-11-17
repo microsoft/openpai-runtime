@@ -127,7 +127,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                     self._image_uri)
                 return
 
-        username = auth["username"] if "username" in auth else ""
+        username = utils.render_string_with_secrets(
+            auth["username"], secret) if "username" in auth else ""
         password = utils.render_string_with_secrets(
             auth["password"], secret) if "password" in auth else ""
 
