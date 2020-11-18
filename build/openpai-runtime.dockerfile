@@ -65,7 +65,7 @@ COPY src/ ./
 COPY requirements.txt ./
 
 COPY --from=frameworkcontroller/frameworkbarrier:v0.9.0 $BARRIER_DIR/frameworkbarrier ./init.d
-COPY --from=builder ${INSTALL_DIR}/* ./runtime.d
+COPY --from=builder ${INSTALL_DIR}/* ./runtime.d/
 
 RUN pip install -r requirements.txt
 RUN chmod -R +x ./
