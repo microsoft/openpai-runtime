@@ -17,6 +17,8 @@
 
 import json
 import os
+import shutil
+import stat
 import sys
 import unittest
 from unittest import mock
@@ -82,6 +84,24 @@ class TestRuntime(unittest.TestCase):
         commands = [[], []]
         initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
                                  ".", "worker")
+
+    def test_git_plugin(self):
+        job_path = "git_repo_test_job.yaml"
+        if os.path.exists(job_path):
+            with open(job_path, 'rt') as f:
+                jobconfig = yaml.safe_load(f)
+        commands = [[], []]
+        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins", ".",
+                                 "worker")
+        repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../src/code")
+        self.assertTrue(os.path.exists(repo_local_path))
+        shutil.rmtree(repo_local_path, onerror=self.on_remove_error)
+
+    @staticmethod
+    def on_remove_error(func, path, _):
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+
 
     def load_json_file(self, file_name):
         with open(file_name) as f:

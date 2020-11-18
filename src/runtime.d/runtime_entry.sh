@@ -67,6 +67,8 @@ function exit_handler()
   # Deal with log rotate case. Merge current log with rotated log
   # if current log size is too small
   local USER_LOG_FILE=${USER_ALL_LOG_DIR}/current
+  touch ${USER_LOG_FILE} # Make sure the log file exist
+
   local LOG_FILE_SIZE=$(wc -c ${USER_LOG_FILE} | awk '{print $1}')
   local MIN_LOG_SIZE=$(( 16*1024 )) # 16KB
   local ROTATED_LOG_FILE=$(find ${USER_ALL_LOG_DIR} -name @*.s -print -quit)
