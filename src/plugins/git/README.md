@@ -13,9 +13,10 @@ extras:
         options:
         - <git clone options>
         clone_dir: <clone dir>
+      failurePolicy: ignore/fail
 ```
 
 ## Notice
 If parameter `clone_dir` is missing, repo will be cloned into `/usr/local/pai/code`.
 
-If `clone_dir` is an exist folder in user container, `git` plugin may overwrite the files with the same name.
+If `clone_dir` exists and is not empty, `git` plugin will failed.
