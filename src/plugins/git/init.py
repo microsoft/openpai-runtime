@@ -18,6 +18,7 @@
 
 import logging
 import os
+from os import curdir
 import sys
 
 import backoff
@@ -40,8 +41,8 @@ def main():
     [plugin_config, pre_script, _] = plugin_init()
     plugin_helper = PluginHelper(plugin_config)
 
-    repo_local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "../../code")
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_local_path = os.path.join(cur_dir, "../../code")
     parameters = plugin_config.get("parameters")
     if not parameters or "repo_uri" not in parameters:
         LOGGER.error("Can not find repo in runtime plugin")
@@ -54,10 +55,10 @@ def main():
         Repo.clone_from(parameters["repo_uri"], repo_local_path)
     if "clone_dir" in parameters:
         plugin_helper.inject_commands([
-            "if [ -d {} ]; then echo 'Warning: {} exists, may overwrite the files'; fi"
-            .format(parameters["clone_dir"], parameters["clone_dir"]),
-            "mkdir -p {}".format(parameters["clone_dir"]),
-            "mv -f {}/* {}".format(repo_local_path, parameters["clone_dir"])
+            "{}/check_clone_dir.sh {}".format(
+                cur_dir, parameters["clone_dir"]), "mkdir -p {}".format(
+                    parameters["clone_dir"]), "mv -f {}/* {}".format(
+                        repo_local_path, parameters["clone_dir"])
         ], pre_script)
 
 
