@@ -54,6 +54,8 @@ def main():
         Repo.clone_from(parameters["repo_uri"], repo_local_path)
     if "clone_dir" in parameters:
         plugin_helper.inject_commands([
+            "if [ -d {} ]; then echo 'Warning: {} exists, may overwrite the files'; fi"
+            .format(parameters["clone_dir"], parameters["clone_dir"]),
             "mkdir -p {}".format(parameters["clone_dir"]),
             "mv -f {}/* {}".format(repo_local_path, parameters["clone_dir"])
         ], pre_script)
