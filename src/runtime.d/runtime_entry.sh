@@ -85,8 +85,7 @@ function exit_handler()
   ${RUNTIME_SCRIPT_DIR}/exithandler ${USER_EXIT_CODE} \
                                     ${USER_LOG_FILE} \
                                     ${RUNTIME_LOG} \
-                                    ${TERMINATION_MESSAGE_PATH} ${PATTERN_FILE} | \
-                                    ${PROCESS_RUNTIME_LOG} ${RUNTIME_LOG}
+                                    ${TERMINATION_MESSAGE_PATH} ${PATTERN_FILE}
 
   CONTAINER_EXIT_CODE=$?
 

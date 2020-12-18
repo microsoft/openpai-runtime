@@ -22,5 +22,21 @@ $RUNTIME_LOG_DIR = "${RUNTIME_WORK_DIR}/logs/${FC_POD_UID}"
 $RUNTIME_LOG_DIR = "${RUNTIME_WORK_DIR}/logs/${FC_POD_UID}"
 $PATTERN_FILE = "${RUNTIME_SCRIPT_DIR}/runtime-exit-spec.yaml"
 
+$user_exit_code = 0
+trap {
+    Start-Process ${RUNTIME_SCRIPT_DIR}\exithandler.exe -Wait \
+                -ArgumentList @("${USER_EXIT_CODE}",
+                                "${USER_LOG_FILE}",
+                                ${RUNTIME_LOG}
+                                ${TERMINATION_MESSAGE_PATH} ${PATTERN_FILE} | \
+                                ${PROCESS_RUNTIME_LOG} ${RUNTIME_LOG}
+
+}
+
 $job_id = Start-Job -FilePath "${RUNTIME_SCRIPT_DIR}/user.ps1"
 $job_id | Wait-Job
+
+$user_exit_code = $?
+if ($user_exit_code -eq $false) {
+    throw "user command faield"
+}
