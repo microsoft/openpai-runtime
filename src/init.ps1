@@ -15,14 +15,16 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-$PAI_WORK_DIR = "C:\Program Files\pai"
-$PAI_CONFIG_DIR = "C:\Program Files\pai-config"
+# $PAI_WORK_DIR = "C:\Program Files\pai"
+# $PAI_CONFIG_DIR = "C:\Program Files\pai-config"
+$PAI_WORK_DIR = "C:\Users\binyli\runtime\pai"
+$PAI_CONFIG_DIR = "C:\Users\binyli\runtime\pai-config"
 $PAI_INIT_DIR = "${PAI_WORK_DIR}\init.d"
 $PAI_RUNTIME_DIR = "${PAI_WORK_DIR}\runtime.d"
 
 $PAI_SECRET_DIR = "${PAI_WORK_DIR}\secrets"
 
-Move-Item -Path .\* -Destination ${PAI_WORK_DIR}
+Copy-Item -Path .\* -Destination ${PAI_WORK_DIR} -Force -Recurse
 Set-Location ${PAI_WORK_DIR}
 
 # To run init scripts under init.d in init container,
@@ -39,11 +41,13 @@ Set-Location ${PAI_WORK_DIR}
 
 # error spec
 # priority=1
-CHILD_PROCESS="ERROR_SPEC"
+Write-Output "ERROR_SPEC"
 Copy-Item ${PAI_CONFIG_DIR}\runtime-exit-spec.yaml ${PAI_RUNTIME_DIR}
 
 
 # write user commands to user.sh
 # priority=100
-CHILD_PROCESS="RENDER_USER_COMMAND"
-Start-Process python -Wait -ArgumentList @("${PAI_INIT_DIR}/user_command_renderer.py", "${PAI_SECRET_DIR}/secrets.yaml", "${PAI_RUNTIME_DIR}/user.ps1")
+Write-Output "RENDER_USER_COMMAND"
+Start-Process "python" -Wait -NoNewWindow -ArgumentList @("${PAI_INIT_DIR}/user_command_renderer.py",
+                                                          "${PAI_SECRET_DIR}/secrets.yaml",
+                                                          "${PAI_RUNTIME_DIR}/user.ps1")
