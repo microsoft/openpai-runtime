@@ -16,7 +16,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 $PAI_WORK_DIR = "C:\Program Files\pai"
-$PAI_CONFIG_DIR = "C:\Program Files\pai-config"
 $PAI_INIT_DIR = "${PAI_WORK_DIR}\init.d"
 $PAI_RUNTIME_DIR = "${PAI_WORK_DIR}\runtime.d"
 
@@ -36,11 +35,6 @@ Set-Location ${PAI_WORK_DIR}
 # priority=value
 # CHILD_PROCESS="NAME_FOR_THE_INITIALIZER"
 # ${PAI_INIT_DIR}/init.ps1
-
-# error spec
-# priority=1
-Write-Output "ERROR_SPEC"
-Copy-Item ${PAI_CONFIG_DIR}\runtime-exit-spec.yaml ${PAI_RUNTIME_DIR}
 
 
 # write user commands to user.sh

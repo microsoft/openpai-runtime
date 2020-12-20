@@ -18,4 +18,5 @@
 $RUNTIME_WORK_DIR = "/usr/local/pai"
 $RUNTIME_SCRIPT_DIR = "${RUNTIME_WORK_DIR}/runtime.d"
 
-Start-Process  "${RUNTIME_SCRIPT_DIR}/user.ps1" -NoNewWindow -Wait
+"${RUNTIME_SCRIPT_DIR}/user.ps1"
+exit $LASTEXITCODE
