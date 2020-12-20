@@ -15,10 +15,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# $PAI_WORK_DIR = "C:\Program Files\pai"
-# $PAI_CONFIG_DIR = "C:\Program Files\pai-config"
-$PAI_WORK_DIR = "C:\Users\binyli\runtime\pai"
-$PAI_CONFIG_DIR = "C:\Users\binyli\runtime\pai-config"
+$PAI_WORK_DIR = "C:\Program Files\pai"
+$PAI_CONFIG_DIR = "C:\Program Files\pai-config"
 $PAI_INIT_DIR = "${PAI_WORK_DIR}\init.d"
 $PAI_RUNTIME_DIR = "${PAI_WORK_DIR}\runtime.d"
 
@@ -48,6 +46,4 @@ Copy-Item ${PAI_CONFIG_DIR}\runtime-exit-spec.yaml ${PAI_RUNTIME_DIR}
 # write user commands to user.sh
 # priority=100
 Write-Output "RENDER_USER_COMMAND"
-Start-Process "python" -Wait -NoNewWindow -ArgumentList @("${PAI_INIT_DIR}/user_command_renderer.py",
-                                                          "${PAI_SECRET_DIR}/secrets.yaml",
-                                                          "${PAI_RUNTIME_DIR}/user.ps1")
+python "${PAI_INIT_DIR}/user_command_renderer.py" "${PAI_SECRET_DIR}/secrets.yaml" "${PAI_RUNTIME_DIR}/user.ps1"
