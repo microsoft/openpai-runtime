@@ -88,7 +88,7 @@ def init_deployment(jobconfig, commands, taskrole):
                         deployment["taskRoles"][taskrole]["postCommands"]))
 
 
-def init_one_plugin(plugins_path, plugin_config, runtime_path, secrets, plugin_index):
+def init_one_plugin(jobconfig, secrets, plugins_path, runtime_path, taskrole, plugin_config, plugin_index):
     plugin_name = plugin_config["plugin"]
     plugin_raw_parameters = str(plugin_config.get("parameters", ""))
     plugin_base_path = "{}/{}".format(plugins_path, plugin_name)
@@ -150,7 +150,7 @@ def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
                 plugin_config['parameters'] = copy.deepcopy(prerequisite_config)
 
                 LOGGER.info('prepare prerequisite {} with plugin config {}'.format(prerequisite_name, str(plugin_config)))
-                plugin_scripts = init_one_plugin(plugins_path, plugin_config, runtime_path, secrets, plugin_index)
+                plugin_scripts = init_one_plugin(jobconfig, secrets, plugins_path, runtime_path, taskrole, plugin_config, plugin_index)
                 plugin_index += 1
 
                 if os.path.isfile(plugin_scripts[0]):
@@ -169,7 +169,7 @@ def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
             if "taskroles" in plugin and taskrole not in plugin["taskroles"]:
                 continue
 
-            plugin_scripts = init_one_plugin(plugins_path, copy.deepcopy(plugin), runtime_path, secrets, plugin_index)
+            plugin_scripts = init_one_plugin(jobconfig, secrets, plugins_path, runtime_path, taskrole, copy.deepcopy(plugin), plugin_index)
             plugin_index += 1
 
             if os.path.isfile(plugin_scripts[0]):
