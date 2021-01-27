@@ -88,6 +88,33 @@ def init_deployment(jobconfig, commands, taskrole):
                         deployment["taskRoles"][taskrole]["postCommands"]))
 
 
+def init_one_plugin(plugins_path, plugin_config, runtime_path, secrets, plugin_index):
+    plugin_name = plugin_config["plugin"]
+    plugin_raw_parameters = str(plugin_config.get("parameters", ""))
+    plugin_base_path = "{}/{}".format(plugins_path, plugin_name)
+
+    parameters = yaml.safe_load(
+        replace_ref(plugin_raw_parameters, jobconfig, secrets,
+                    taskrole))
+    plugin["parameters"] = parameters
+
+    with open("{}/desc.yaml".format(plugin_base_path), "r") as f:
+        plugin_desc = yaml.safe_load(f)
+
+    plugin_scripts = [
+        "{}/plugin_pre{}.sh".format(runtime_path, plugin_index),
+        "{}/plugin_post{}.sh".format(runtime_path, plugin_index)
+    ]
+
+    LOGGER.info("Starting to prepare plugin %s", plugin_name)
+    # Run init script
+    if "init-script" in plugin_desc:
+        run_script(
+            "{}/{}".format(plugin_base_path, plugin_desc["init-script"]),
+            plugin, plugin_scripts)
+    return plugin_scripts
+
+
 def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
                  taskrole):
     """Init plugins from jobconfig.
@@ -97,47 +124,59 @@ def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
         secrets: user secrests passed to runtime.
         commands: Commands to call in precommands.sh and postcommands.sh.
         plugins_path: The base path for all plugins.
-        output_path: The output path of plugin generated scripts.
+        runtime_path: The output path of plugin generated scripts.
+        taskrole: the taskrole of this container
     """
-    if "extras" not in jobconfig or RUNTIME_PLUGIN_PLACE_HOLDER not in jobconfig[
-            "extras"]:
-        return
+    plugin_index = 0
+    # init plugins in the "prerequisites" field
+    if 'prerequisites' in jobconfig['taskRoles'][taskrole] and 'prerequisites' in jobconfig:
+        # read prerequisite_config from jobconfig['prerequisites']
+        prerequisites_name2config = {}
+        for prerequisite_config in jobconfig['prerequisites']:
+            prerequisites_name2config[prerequisite_config['name']] = prerequisite_config
+        # init every prerequisite in jobconfig['taskRoles'][taskrole]['prerequisites']
+        for prerequisite_name in jobconfig['taskRoles'][taskrole]['prerequisites']:
+            prerequisite_config = copy.deepcopy(prerequisites_name2config[prerequisite_name])
+            if 'plugin' in prerequisite_config and prerequisite_config['plugin'].startswith(RUNTIME_PLUGIN_PLACE_HOLDER):
+                # convert prerequisite to runtime plugin config 
+                plugin_config = {
+                    # plugin name follows the format "com.microsoft.pai.runtimeplugin.<plugin name>"
+                    'plugin': prerequisite_config.pop('plugin')[len(RUNTIME_PLUGIN_PLACE_HOLDER) + 1:]
+                }
+                if 'failurePolicy' in prerequisite_config:
+                    plugin_config['failurePolicy'] = prerequisite_config.pop('failurePolicy')
+                prerequisite_config.pop('type', None)
+                # the remaining keys (other than plugin, failurePolicy, and type) will be treated as parameters
+                plugin_config['parameters'] = copy.deepcopy(prerequisite_config)
 
-    for index in range(len(jobconfig["extras"][RUNTIME_PLUGIN_PLACE_HOLDER])):
-        plugin = jobconfig["extras"][RUNTIME_PLUGIN_PLACE_HOLDER][index]
+                LOGGER.info('prepare prerequisite {} with plugin config {}'.format(prerequisite_name, str(plugin_config)))
+                plugin_scripts = init_one_plugin(plugins_path, plugin_config, runtime_path, secrets, plugin_index)
+                plugin_index += 1
 
-        # Check taskroles
-        if "taskroles" in plugin and taskrole not in plugin["taskroles"]:
-            continue
+                if os.path.isfile(plugin_scripts[0]):
+                    commands[0].append("/bin/bash {}".format(plugin_scripts[0]))
 
-        plugin_name = plugin["plugin"]
-        plugin_base_path = "{}/{}".format(plugins_path, plugin_name)
+                if os.path.isfile(plugin_scripts[1]):
+                    commands[1].insert(0, "/bin/bash {}".format(plugin_scripts[1]))
 
-        parameters = yaml.safe_load(
-            replace_ref(str(plugin.get("parameters", "")), jobconfig, secrets,
-                        taskrole))
-        plugin["parameters"] = parameters
 
-        with open("{}/desc.yaml".format(plugin_base_path), "r") as f:
-            plugin_desc = yaml.safe_load(f)
+    # init plugins in the "extras" field
+    if "extras" in jobconfig and RUNTIME_PLUGIN_PLACE_HOLDER in jobconfig["extras"]:
+        for index in range(len(jobconfig["extras"][RUNTIME_PLUGIN_PLACE_HOLDER])):
+            plugin = jobconfig["extras"][RUNTIME_PLUGIN_PLACE_HOLDER][index]
 
-        plugin_scripts = [
-            "{}/plugin_pre{}.sh".format(runtime_path, index),
-            "{}/plugin_post{}.sh".format(runtime_path, index)
-        ]
+            # Check taskroles
+            if "taskroles" in plugin and taskrole not in plugin["taskroles"]:
+                continue
 
-        LOGGER.info("Starting to prepare plugin %s", plugin_name)
-        # Run init script
-        if "init-script" in plugin_desc:
-            run_script(
-                "{}/{}".format(plugin_base_path, plugin_desc["init-script"]),
-                plugin, plugin_scripts)
+            plugin_scripts = init_one_plugin(plugins_path, copy.deepcopy(plugin), runtime_path, secrets, plugin_index)
+            plugin_index += 1
 
-        if os.path.isfile(plugin_scripts[0]):
-            commands[0].append("/bin/bash {}".format(plugin_scripts[0]))
+            if os.path.isfile(plugin_scripts[0]):
+                commands[0].append("/bin/bash {}".format(plugin_scripts[0]))
 
-        if os.path.isfile(plugin_scripts[1]):
-            commands[1].insert(0, "/bin/bash {}".format(plugin_scripts[1]))
+            if os.path.isfile(plugin_scripts[1]):
+                commands[1].insert(0, "/bin/bash {}".format(plugin_scripts[1]))
 
 
 def replace_ref(param_str, jobconfig, secrets, taskrole):
