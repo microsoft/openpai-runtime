@@ -158,8 +158,8 @@ def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
             plugin_desc = yaml.safe_load(f)
 
         plugin_scripts = [
-            "{}/plugin_pre{}.sh".format(runtime_path, index),
-            "{}/plugin_post{}.sh".format(runtime_path, index)
+            "{}/plugin_pre{}.sh".format(runtime_path, plugin_index),
+            "{}/plugin_post{}.sh".format(runtime_path, plugin_index)
         ]
 
         LOGGER.info("Starting to prepare plugin %s", plugin_name)
