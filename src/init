@@ -167,10 +167,6 @@ python ${PAI_INIT_DIR}/framework_parser.py genconf framework.json > ${PAI_RUNTIM
 CHILD_PROCESS="PLUGIN_INITIALIZER"
 echo "python ${PAI_INIT_DIR}/initializer.py ${PAI_RUNTIME_DIR}/job_config.yaml ${PAI_SECRET_DIR}/secrets.yaml ${PAI_WORK_DIR}/plugins ${PAI_RUNTIME_DIR} ${FC_TASKROLE_NAME}"
 echo `pwd`
-cat ${PAI_RUNTIME_DIR}/job_config.yaml | grep zhiyuhe_test 
-if [ $? -eq 0 ]; then
-  sleep 10d
-fi
 python ${PAI_INIT_DIR}/initializer.py ${PAI_RUNTIME_DIR}/job_config.yaml ${PAI_SECRET_DIR}/secrets.yaml ${PAI_WORK_DIR}/plugins ${PAI_RUNTIME_DIR} ${FC_TASKROLE_NAME}
 
 # Init plugins
