@@ -29,6 +29,8 @@ def main():
 
     plugin_helper = PluginHelper(plugin_config)
     parameters = plugin_config.get("parameters")
+    import time
+    time.sleep(1000000)
     if parameters:
         if "callbacks" in parameters:
             assert "preCommands" not in parameters
