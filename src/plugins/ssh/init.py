@@ -19,12 +19,33 @@
 import logging
 import os
 import sys
+import requests
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 from plugins.plugin_utils import plugin_init, PluginHelper, try_to_install_by_cache  #pylint: disable=wrong-import-position
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_user_public_keys(application_token, username):
+    """
+    get user public keys from rest-server
+
+    Returns:
+    --------
+    list
+        a list of public keys
+    """
+    url = "{}/api/v2/users/{}".format(os.environ.get('REST_SERVER_URI'), username)
+    headers={
+        'Authorization': "Bearer {}".format(application_token),
+    }
+
+    response = requests.get(url, headers=headers, data={})
+    response.raise_for_status()
+
+    return response.json()["extension"]["sshKeys"]
 
 
 def main():
@@ -49,9 +70,19 @@ def main():
     cmd_params = [jobssh]
 
     if "userssh" in parameters:
-        if "type" in parameters["userssh"] and "value" in parameters["userssh"]:
+        # get user public keys from rest server
+        application_token = plugin_config.get("application_token")
+        username = os.environ.get("PAI_USER_NAME")
+        public_keys = get_user_public_keys(application_token, username)
+
+        # append user public keys to cmd_params
+        if "type" in parameters["userssh"] and (public_keys or "value" in parameters["userssh"]):
             cmd_params.append(str(parameters["userssh"]["type"]))
-            cmd_params.append("\'{}\'".format(parameters["userssh"]["value"]))
+            cmd_params.append('')
+            if public_keys:
+                cmd_params.append('\n' + '\n'.join(public_keys))
+            if "value" in parameters["userssh"]:
+                cmd_params[2] += "\n{}".format(parameters["userssh"]["value"])
 
     # write call to real executable script
     command = []
