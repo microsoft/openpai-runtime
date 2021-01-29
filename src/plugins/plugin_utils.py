@@ -42,6 +42,7 @@ class PluginHelper:  #pylint: disable=too-few-public-methods
                 new_commands.append("set -o errexit\n")
             else:
                 new_commands.insert(0, "set -o errexit\n")
+            new_commands.insert(0, "set +x")
             with open(script, 'a+') as f:
                 f.writelines(new_commands)
 

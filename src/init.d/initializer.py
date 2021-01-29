@@ -170,10 +170,10 @@ def init_plugins(jobconfig, secrets, commands, plugins_path, runtime_path,
                 plugin_config, plugin_scripts)
 
         if os.path.isfile(plugin_scripts[0]):
-            commands[0].append("/bin/bash -x {}".format(plugin_scripts[0]))
+            commands[0].append("/bin/bash {}".format(plugin_scripts[0]))
 
         if os.path.isfile(plugin_scripts[1]):
-            commands[1].insert(0, "/bin/bash -x {}".format(plugin_scripts[1]))
+            commands[1].insert(0, "/bin/bash {}".format(plugin_scripts[1]))
 
 
 
