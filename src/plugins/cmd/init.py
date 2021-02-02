@@ -38,7 +38,7 @@ def main():
             for callback in parameters['callbacks']:
                 if callback['event'] == 'containerStarts':
                     pre_commands.extend(callback['commands'])
-                elif callback['event'] == 'containerEnds':
+                elif callback['event'] == 'containerSucceeds':
                     post_commands.extend(callback['commands'])
             if len(pre_commands) > 0:
                 plugin_helper.inject_commands(pre_commands, pre_script)
