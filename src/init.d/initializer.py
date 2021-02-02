@@ -197,10 +197,8 @@ def main():
         with open(args.secret_file) as f:
             secrets = yaml.safe_load(f.read())
 
-    application_token = args.application_token
-
     commands = [[], []]
-    init_plugins(job_config, secrets, application_token, commands, args.plugins_path,
+    init_plugins(job_config, secrets, args.application_token, commands, args.plugins_path,
                  args.runtime_path, args.task_role)
 
     # pre-commands and post-commands already handled by rest-server.
