@@ -73,7 +73,8 @@ def main():
         # get user public keys from rest server
         application_token = plugin_config.get("application_token")
         username = os.environ.get("PAI_USER_NAME")
-        public_keys = get_user_public_keys(application_token, username)
+        if application_token:
+            public_keys = get_user_public_keys(application_token, username)
 
         # append user public keys to cmd_params
         if "type" in parameters["userssh"] and (public_keys or "value" in parameters["userssh"]):
