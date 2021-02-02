@@ -36,9 +36,9 @@ def main():
             pre_commands = []
             post_commands = []
             for callback in parameters['callbacks']:
-                if callback['event'] == 'containerStarts':
+                if callback['event'] == 'taskStarts':
                     pre_commands.extend(callback['commands'])
-                elif callback['event'] == 'containerSucceeds':
+                elif callback['event'] == 'taskSucceeds':
                     post_commands.extend(callback['commands'])
             if len(pre_commands) > 0:
                 plugin_helper.inject_commands(pre_commands, pre_script)
