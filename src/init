@@ -29,6 +29,7 @@ CHILD_PROCESS="UNKNOWN"
 #                    201 -> 251 JobGangAllocationTimeout
 #                    210 -> 252 FrameworkBarrierPermanentFailed
 # PORT_CONFLICT_CHECKER: 10 -> 253 ContainerPortConflict
+# PLUGIN_INITIALIZER: 255 PluginInitializeFailed
 # PAIRuntimeInitContainerUnkownError: 248
 function exit_handler()
 {
@@ -61,6 +62,10 @@ function exit_handler()
 
   if [[ $CHILD_PROCESS = "DOCKER_IMAGE_CHECKER" ]]; then
     exit 254
+  fi
+
+  if [[ $CHILD_PROCESS = "PLUGIN_INITIALIZER" ]]; then
+    exit 255
   fi
 
   # signal triggered, do not change exit code
