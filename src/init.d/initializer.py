@@ -119,8 +119,9 @@ def init_plugins(jobconfig, secrets, application_token, commands, plugins_path, 
                         taskrole))
         plugin["parameters"] = parameters
 
-        with open(application_token, "r") as f:
-            plugin["application_token"] = yaml.safe_load(f)
+        if os.path.exists(application_token):
+            with open(application_token, "r") as f:
+                plugin["application_token"] = yaml.safe_load(f)
 
         with open("{}/desc.yaml".format(plugin_base_path), "r") as f:
             plugin_desc = yaml.safe_load(f)
