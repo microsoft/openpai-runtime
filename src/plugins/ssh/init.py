@@ -77,14 +77,13 @@ def main():
         if application_token:
             public_keys = get_user_public_keys(application_token, username)
 
+        if "value" in parameters["userssh"]:
+            public_keys.append(parameters["userssh"]["value"])
+
         # append user public keys to cmd_params
-        if "type" in parameters["userssh"] and (public_keys or "value" in parameters["userssh"]):
+        if "type" in parameters["userssh"] and public_keys:
             cmd_params.append(str(parameters["userssh"]["type"]))
-            cmd_params.append('')
-            if public_keys:
-                cmd_params.append('\n' + '\n'.join(public_keys))
-            if "value" in parameters["userssh"]:
-                cmd_params[2] += "\n{}".format(parameters["userssh"]["value"])
+            cmd_params.append("\'{}\'".format('\n'.join(public_keys)))
 
     # write call to real executable script
     command = []

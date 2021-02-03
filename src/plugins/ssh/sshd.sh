@@ -93,7 +93,8 @@ function prepare_system_user_ssh()
 function prepare_custom_user_ssh()
 {
   # append all user ssh public keys to authorized_keys
-  echo $1 >> ${SSH_DIR}/authorized_keys
+  # example of $1 : 'ssh-rsa hash pai-job-ssh\nssh-ras hash pai-job-ssh'
+  printf "%b\n" "$1" >> ${SSH_DIR}/authorized_keys
 }
 
 function start_ssh()
