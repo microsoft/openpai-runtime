@@ -32,6 +32,20 @@ def get_user_public_keys(application_token, username):
     """
     get user public keys from rest-server
 
+    Format of API `REST_SERVER_URI/api/v2/users/<username>` response:
+    {
+        "xxx": "xxx",
+        "extensions": {
+            "sshKeys": [
+                {
+                    "title": "title-of-the-public-key",
+                    "value": "ssh-rsa xxxx"
+                    "time": "xxx"
+                }
+            ]
+        }
+    }
+
     Returns:
     --------
     list
@@ -45,7 +59,9 @@ def get_user_public_keys(application_token, username):
     response = requests.get(url, headers=headers, data={})
     response.raise_for_status()
 
-    return response.json()["extension"]["sshKeys"]
+    public_keys = [item["value"] for item in response.json()["extension"]["sshKeys"]]
+
+    return public_keys
 
 
 def main():
@@ -77,7 +93,7 @@ def main():
         if application_token:
             public_keys = get_user_public_keys(application_token, username)
 
-        if "value" in parameters["userssh"]:
+        if "value" in parameters["userssh"] and parameters["userssh"]["value"] != "":
             public_keys.append(parameters["userssh"]["value"])
 
         # append user public keys to cmd_params
