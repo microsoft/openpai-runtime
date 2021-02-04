@@ -1,0 +1,51 @@
+protocolVersion: 2
+name: cmd_with_prerequisites_test_job
+type: job
+version: 1
+contributor: OpenPAI
+parameters:
+  modelPath: /tmp/mnist_model
+prerequisites:
+  - protocolVersion: 2
+    name: tf_serving_example
+    type: dockerimage
+    version: 1.0-r1.4
+    contributor: OpenPAI
+    uri: openpai/pai.example.tensorflow-serving
+  - protocolVersion: 2
+    name: cifar10
+    type: data
+    version: latest
+    contributor: OpenPAI
+    uri:
+      - 'https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
+  - protocolVersion: 2
+    name: cifar10-load-data
+    type: script
+    plugin: com.microsoft.pai.runtimeplugin.cmd
+    callbacks:
+      - event: taskStarts
+        commands:
+          - echo "PreCommands start ..."
+          - >-
+            wget -qO- <% $data.uri[0] %> | tar xvz && mv cifar-10-batches-py
+            data_<% $data.name %>
+      - event: taskSucceeds
+        commands:
+          - echo "PostCommands start ..."
+
+taskRoles:
+  worker:
+    prerequisites:
+      - cifar10-load-data
+    instances: 1
+    dockerImage: tf_serving_example
+    data: cifar10
+    resourcePerInstance:
+      cpu: 4
+      memoryMB: 8192
+      gpu: 1
+      ports:
+        model_server: 1
+    commands:
+      - echo "Commands start ..."
