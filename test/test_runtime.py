@@ -69,7 +69,7 @@ class TestRuntime(unittest.TestCase):
             with open(job_path, 'rt') as f:
                 jobconfig = yaml.safe_load(f)
         commands = [[], []]
-        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
+        initializer.init_plugins(jobconfig, {}, "", commands, "../src/plugins",
                                  ".", "worker")
 
     def test_cmd_plugin_with_prerequisites(self):
@@ -78,7 +78,7 @@ class TestRuntime(unittest.TestCase):
             with open(job_path, 'rt') as f:
                 jobconfig = yaml.safe_load(f)
         commands = [[], []]
-        initializer.init_plugins(jobconfig, {}, commands, "../src/plugins",
+        initializer.init_plugins(jobconfig, {}, "", commands, "../src/plugins",
                                  ".", "worker")
 
     def test_ssh_plugin(self):
