@@ -19,12 +19,49 @@
 import logging
 import os
 import sys
+import requests
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 from plugins.plugin_utils import plugin_init, PluginHelper, try_to_install_by_cache  #pylint: disable=wrong-import-position
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_user_public_keys(application_token, username):
+    """
+    get user public keys from rest-server
+
+    Format of API `REST_SERVER_URI/api/v2/users/<username>` response:
+    {
+        "xxx": "xxx",
+        "extensions": {
+            "sshKeys": [
+                {
+                    "title": "title-of-the-public-key",
+                    "value": "ssh-rsa xxxx"
+                    "time": "xxx"
+                }
+            ]
+        }
+    }
+
+    Returns:
+    --------
+    list
+        a list of public keys
+    """
+    url = "{}/api/v2/users/{}".format(os.environ.get('REST_SERVER_URI'), username)
+    headers={
+        'Authorization': "Bearer {}".format(application_token),
+    }
+
+    response = requests.get(url, headers=headers, data={})
+    response.raise_for_status()
+
+    public_keys = [item["value"] for item in response.json()["extension"]["sshKeys"]]
+
+    return public_keys
 
 
 def main():
@@ -49,9 +86,24 @@ def main():
     cmd_params = [jobssh]
 
     if "userssh" in parameters:
-        if "type" in parameters["userssh"] and "value" in parameters["userssh"]:
+        # get user public keys from rest server
+        application_token = plugin_config.get("application_token")
+        username = os.environ.get("PAI_USER_NAME")
+        public_keys = []
+        if application_token:
+            try:
+                public_keys = get_user_public_keys(application_token, username)
+            except Exception:  #pylint: disable=broad-except
+                LOGGER.error("Failed to get user public keys", exc_info=True)
+                sys.exit(1)
+
+        if "value" in parameters["userssh"] and parameters["userssh"]["value"] != "":
+            public_keys.append(parameters["userssh"]["value"])
+
+        # append user public keys to cmd_params
+        if "type" in parameters["userssh"] and public_keys:
             cmd_params.append(str(parameters["userssh"]["type"]))
-            cmd_params.append("\'{}\'".format(parameters["userssh"]["value"]))
+            cmd_params.append("\'{}\'".format('\n'.join(public_keys)))
 
     # write call to real executable script
     command = []

@@ -32,7 +32,7 @@ function prepare_ssh()
 
   mkdir -p /var/run/sshd
 
-# Set sshd config
+  # Set sshd config
   sed -i 's/[# ]*PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
   sed -i 's/[# ]*Port.*/Port '$PAI_CONTAINER_SSH_PORT'/' /etc/ssh/sshd_config
   echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config
@@ -41,14 +41,14 @@ function prepare_ssh()
 
   echo "sshd:ALL" >> /etc/hosts.allow
 
-# Set user environment
+  # Set user environment
   env > ${SSH_DIR}/environment
 }
 
 function prepare_job_ssh()
 {
-# Job ssh files are mounted to /usr/local/pai/ssh-secret.
-# Please refer to https://kubernetes.io/docs/concepts/configuration/secret/#use-case-pod-with-ssh-keys
+  # Job ssh files are mounted to /usr/local/pai/ssh-secret.
+  # Please refer to https://kubernetes.io/docs/concepts/configuration/secret/#use-case-pod-with-ssh-keys
   localPublicKeyPath=${PAI_WORK_DIR}/ssh-secret/ssh-publickey
   localPrivateKeyPath=${PAI_WORK_DIR}/ssh-secret/ssh-privatekey
 
@@ -61,7 +61,7 @@ function prepare_job_ssh()
     echo "no job ssh keys found" >&2
   fi
 
-# Set ssh config for all task role instances
+  # Set ssh config for all task role instances
   taskRoleInstanceArray=(${PAI_TASK_ROLE_INSTANCES//,/ })
   for i in "${taskRoleInstanceArray[@]}"; do
     instancePair=(${i//:/ })
@@ -92,7 +92,9 @@ function prepare_system_user_ssh()
 
 function prepare_custom_user_ssh()
 {
-  echo $1 >> ${SSH_DIR}/authorized_keys
+  # append all user ssh public keys to authorized_keys
+  # example of $1 : 'ssh-rsa hash pai-job-ssh\nssh-ras hash pai-job-ssh'
+  printf "%b\n" "$1" >> ${SSH_DIR}/authorized_keys
 }
 
 function start_ssh()
