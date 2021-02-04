@@ -30,12 +30,27 @@ def main():
     plugin_helper = PluginHelper(plugin_config)
     parameters = plugin_config.get("parameters")
     if parameters:
-        if "preCommands" in parameters:
-            plugin_helper.inject_commands(parameters["preCommands"],
-                                          pre_script)
-        if "postCommands" in parameters:
-            plugin_helper.inject_commands(parameters["postCommands"],
-                                          post_script)
+        if "callbacks" in parameters:
+            assert "preCommands" not in parameters
+            assert "postCommands" not in parameters
+            pre_commands = []
+            post_commands = []
+            for callback in parameters['callbacks']:
+                if callback['event'] == 'taskStarts':
+                    pre_commands.extend(callback['commands'])
+                elif callback['event'] == 'taskSucceeds':
+                    post_commands.extend(callback['commands'])
+            if len(pre_commands) > 0:
+                plugin_helper.inject_commands(pre_commands, pre_script)
+            if len(post_commands) > 0:
+                plugin_helper.inject_commands(post_commands, post_script)
+        else:
+            if "preCommands" in parameters:
+                plugin_helper.inject_commands(parameters["preCommands"],
+                                              pre_script)
+            if "postCommands" in parameters:
+                plugin_helper.inject_commands(parameters["postCommands"],
+                                              post_script)
 
 
 if __name__ == "__main__":
