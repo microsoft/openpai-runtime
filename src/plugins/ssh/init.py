@@ -24,8 +24,6 @@ import requests
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 from plugins.plugin_utils import plugin_init, PluginHelper, try_to_install_by_cache  #pylint: disable=wrong-import-position
-#pylint: disable=wrong-import-position
-from common.exceptions import UnknownError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +95,7 @@ def main():
                 public_keys = get_user_public_keys(application_token, username)
             except Exception:  #pylint: disable=broad-except
                 LOGGER.error("Failed to get user public keys", exc_info=True)
-                raise UnknownError("Failed to get user public keys")
+                sys.exit(1)
 
         if "value" in parameters["userssh"] and parameters["userssh"]["value"] != "":
             public_keys.append(parameters["userssh"]["value"])
