@@ -77,12 +77,8 @@ def main():
     if "userssh" in parameters:
         # get user public keys from user extension secret
         public_keys = []
-        if user_extension:
-            try:
-                public_keys = get_user_public_keys(user_extension)
-            except Exception:  #pylint: disable=broad-except
-                LOGGER.error("Failed to get user public keys", exc_info=True)
-                sys.exit(1)
+        if user_extension and "sshKeys" in user_extension:
+            public_keys = get_user_public_keys(user_extension)
 
         if "value" in parameters["userssh"] and parameters["userssh"]["value"] != "":
             public_keys.append(parameters["userssh"]["value"])
