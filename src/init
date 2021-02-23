@@ -90,6 +90,7 @@ PAI_RUNTIME_DIR=${PAI_WORK_DIR}/runtime.d
 
 PAI_LOG_DIR=${PAI_WORK_DIR}/logs/${FC_POD_UID}
 PAI_SECRET_DIR=${PAI_WORK_DIR}/secrets
+PAI_USER_EXTENSION_SECRET_DIR=${PAI_WORK_DIR}/user-extension-secrets
 PAI_TOKEN_SECRET_DIR=${PAI_WORK_DIR}/token-secrets
 
 chmod a+rw $PAI_LOG_DIR
@@ -166,7 +167,7 @@ python ${PAI_INIT_DIR}/framework_parser.py genconf framework.json > ${PAI_RUNTIM
 # Init plugins
 # priority=12
 CHILD_PROCESS="PLUGIN_INITIALIZER"
-python ${PAI_INIT_DIR}/initializer.py ${PAI_RUNTIME_DIR}/job_config.yaml ${PAI_SECRET_DIR}/secrets.yaml ${PAI_SECRET_DIR}/userExtensionSecrets.yaml ${PAI_TOKEN_SECRET_DIR}/token ${PAI_WORK_DIR}/plugins ${PAI_RUNTIME_DIR} ${FC_TASKROLE_NAME}
+python ${PAI_INIT_DIR}/initializer.py ${PAI_RUNTIME_DIR}/job_config.yaml ${PAI_SECRET_DIR}/secrets.yaml ${PAI_USER_EXTENSION_SECRET_DIR}/userExtensionSecrets.yaml ${PAI_TOKEN_SECRET_DIR}/token ${PAI_WORK_DIR}/plugins ${PAI_RUNTIME_DIR} ${FC_TASKROLE_NAME}
 
 # Init plugins
 # check port conflict
