@@ -1,5 +1,5 @@
 kubernetes==11.0.0
-pyyaml==5.3.1
+pyyaml==5.4
 requests==2.25.0
 jinja2==2.11.3
 pystache==0.5.4
