@@ -22,7 +22,7 @@ set -o pipefail
 
 TENSORFLOW_VERSION=$(tensorboard --version_tb)
 MAJOR_VERSION=${TENSORFLOW_VERSION:0:1}
-RUNTIME_LOG_PIPE=/usr/local/pai/runtime.d/runtime_log_pipe
+
 if [[ "$MAJOR_VERSION" = "1" ]]; then
     tensorboard --logdir={{ logdir }} --port={{ port }} &
 elif [[ "$MAJOR_VERSION" = "2" ]]; then
