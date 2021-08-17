@@ -16,8 +16,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import logging
 import argparse
+import logging
 import os
 import shutil
 import yaml
@@ -44,6 +44,16 @@ class PluginHelper:  #pylint: disable=too-few-public-methods
                 new_commands.insert(0, "set -o errexit\n")
             with open(script, 'a+') as f:
                 f.writelines(new_commands)
+
+    @staticmethod
+    def generate_termination_info(plugin_name, phrase):
+        terminatoin_message_path = os.environ.get("RUNTIME_TERMINATION_MESSAGE_PATH")
+        with open(terminatoin_message_path, "w") as f:
+            termination_message = {
+                "pluginName": plugin_name,
+                "phrase": phrase
+            }
+            yaml.safe_dump(termination_message, f)
 
 
 def plugin_init():

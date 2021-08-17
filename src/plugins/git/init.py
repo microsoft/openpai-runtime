@@ -18,7 +18,6 @@
 
 import logging
 import os
-from os import curdir
 import sys
 
 import backoff
@@ -36,6 +35,17 @@ LOGGER = logging.getLogger(__name__)
                       GitCommandError,
                       max_tries=10,
                       max_value=300)
+def clone_repo(parameters, repo_path):
+    if not parameters or "repo_uri" not in parameters:
+        LOGGER.error("Can not find repo in runtime plugin")
+        sys.exit(1)
+    if "options" in parameters:
+        Repo.clone_from(parameters["repo_uri"],
+                        repo_path,
+                        multi_options=parameters["options"])
+    else:
+        Repo.clone_from(parameters["repo_uri"], repo_path)
+
 def main():
     LOGGER.info("Preparing git runtime plugin")
     [plugin_config, pre_script, _] = plugin_init()
@@ -44,15 +54,11 @@ def main():
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     repo_local_path = os.path.join(cur_dir, "../../code")
     parameters = plugin_config.get("parameters")
-    if not parameters or "repo_uri" not in parameters:
-        LOGGER.error("Can not find repo in runtime plugin")
-        sys.exit(1)
-    if "options" in parameters:
-        Repo.clone_from(parameters["repo_uri"],
-                        repo_local_path,
-                        multi_options=parameters["options"])
-    else:
-        Repo.clone_from(parameters["repo_uri"], repo_local_path)
+    try:
+        clone_repo(parameters, repo_local_path)
+    except:
+        plugin_helper.generate_termination_info("git-plugin", "clone-repo")
+        raise
     if "clone_dir" in parameters:
         plugin_helper.inject_commands([
             "{}/check_clone_dir.sh {}".format(

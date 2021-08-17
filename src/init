@@ -23,6 +23,7 @@ set -o pipefail
 set -x
 
 CHILD_PROCESS="UNKNOWN"
+RUNTIME_TERMINATION_MESSAGE_PATH=/tmp/runtime-termination-log
 
 # exit code map
 # FRAMEWORK_BARRIER: 200 -> 250 FrameworkBarrierTransientFailed
@@ -33,9 +34,15 @@ CHILD_PROCESS="UNKNOWN"
 function exit_handler()
 {
   EXIT_CODE=$?
-  if [[ $EXIT_CODE -eq 0 ]]; then
-    exit 0
-  fi
+  case $EXIT_CODE in
+    0)
+      exit 0
+      ;;
+    130|131|132|134|135|136|137|139|141|143)
+      # signal triggered, do not change exit code
+      exit $EXIT_CODE
+      ;;
+  esac
 
   echo "start execute exit handler"
   echo "child process is ${CHILD_PROCESS}, exit code is ${EXIT_CODE}"
@@ -63,16 +70,16 @@ function exit_handler()
     exit 254
   fi
 
-  # signal triggered, do not change exit code
-  case $EXIT_CODE in
-    130|131|132|134|135|136|137|139|141|143)
-      exit $EXIT_CODE
-      ;;
-    *)
-      echo "Unknown exit code, platform error"
-      exit 1
-      ;;
-  esac
+  if [[ $CHILD_PROCESS = "PLUGIN_INITIALIZER" ]]; then
+    set +o errexit
+    # genergate aggregated exit info
+    ${RUNTIME_SCRIPT_DIR}/exithandler --termination-info ${RUNTIME_TERMINATION_MESSAGE_PATH}
+    EXIT_CODE=$?
+    exit ${EXIT_CODE}
+  fi
+
+  echo "Unknown exit code"
+  exit 248
 }
 
 trap exit_handler EXIT
