@@ -20,6 +20,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+if ! command -v tensorboard &> /dev/null; then
+    echo "No installation of tensorboard was found, install it now"
+    pip install tensorboard
+fi
+
 TENSORFLOW_VERSION=$(tensorboard --version_tb)
 MAJOR_VERSION=${TENSORFLOW_VERSION:0:1}
 
