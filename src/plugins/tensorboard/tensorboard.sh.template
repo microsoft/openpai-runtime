@@ -20,6 +20,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# For Tensorflow, the image always comes with a tensorboard and this condition will not be met,
+# so we don't need to consider the issue of tensorboard version. For those who use other toolkits
+# and only use tensorboard as a visualization tool, install tensorboard directly, then the
+# tensorboard plugin will work perfectly.
+if ! command -v tensorboard &> /dev/null; then
+    echo "No installation of tensorboard was found, install it now"
+    pip install tensorboard
+fi
+
 TENSORFLOW_VERSION=$(tensorboard --version_tb)
 MAJOR_VERSION=${TENSORFLOW_VERSION:0:1}
 
