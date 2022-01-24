@@ -64,7 +64,7 @@ WORKDIR /kube-runtime/src
 COPY src/ ./
 COPY requirements.txt ./
 
-COPY --from=frameworkcontroller/frameworkbarrier:v0.9.0 $BARRIER_DIR/frameworkbarrier ./init.d
+COPY --from=frameworkcontroller/frameworkbarrier:v1.0.0 $BARRIER_DIR/frameworkbarrier ./init.d
 COPY --from=builder ${INSTALL_DIR}/* ./runtime.d/
 
 RUN pip install -r requirements.txt
