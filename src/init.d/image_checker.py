@@ -106,6 +106,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         self._basic_auth_headers = {}
         self._bearer_auth_headers = {}
         self._registry_auth_type = BASIC_AUTH
+        self._timeout = 10
 
         if "auth" in image_info and secret:
             auth = image_info["auth"]
@@ -158,7 +159,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         del parameters["realm"]
         resp = requests.get(url,
                             headers=self._basic_auth_headers,
-                            params=parameters, timeout=10)
+                            params=parameters, timeout=self._timeout)
         if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
             raise ImageAuthenticationError("Failed to get auth token")
         if not resp.ok:
@@ -171,7 +172,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
 
     def _is_registry_v2_supportted(self) -> bool:
         try:
-            resp = requests.head(self._registry_uri, timeout=10)
+            resp = requests.head(self._registry_uri, timeout=self._timeout)
             if resp.ok or resp.status_code == http.HTTPStatus.UNAUTHORIZED:
                 return True
             return False
@@ -184,7 +185,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 "Registry %s may not support v2 api, ignore image check",
                 self._registry_uri)
             raise UnknownError("Failed to check registry v2 support")
-        resp = requests.head(attempt_url, timeout=10)
+        resp = requests.head(attempt_url, timeout=self._timeout)
         if resp.ok:
             return
         headers = resp.headers
@@ -241,9 +242,9 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             return False
 
         if self._registry_auth_type == BEARER_AUTH:
-            resp = requests.head(url, headers=self._bearer_auth_headers, timeout=10)
+            resp = requests.head(url, headers=self._bearer_auth_headers, timeout=self._timeout)
         else:
-            resp = requests.head(url, headers=self._basic_auth_headers, timeout=10)
+            resp = requests.head(url, headers=self._basic_auth_headers, timeout=self._timeout)
         if resp.ok:
             LOGGER.info("image %s found in registry", self._image_uri)
             return True
