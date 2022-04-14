@@ -158,7 +158,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         del parameters["realm"]
         resp = requests.get(url,
                             headers=self._basic_auth_headers,
-                            params=parameters)
+                            params=parameters, timeout=10)
         if resp.status_code == http.HTTPStatus.UNAUTHORIZED:
             raise ImageAuthenticationError("Failed to get auth token")
         if not resp.ok:
@@ -184,7 +184,7 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                 "Registry %s may not support v2 api, ignore image check",
                 self._registry_uri)
             raise UnknownError("Failed to check registry v2 support")
-        resp = requests.head(attempt_url)
+        resp = requests.head(attempt_url, timeout=10)
         if resp.ok:
             return
         headers = resp.headers
@@ -241,9 +241,9 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
             return False
 
         if self._registry_auth_type == BEARER_AUTH:
-            resp = requests.head(url, headers=self._bearer_auth_headers)
+            resp = requests.head(url, headers=self._bearer_auth_headers, timeout=10)
         else:
-            resp = requests.head(url, headers=self._basic_auth_headers)
+            resp = requests.head(url, headers=self._basic_auth_headers, timeout=10)
         if resp.ok:
             LOGGER.info("image %s found in registry", self._image_uri)
             return True
