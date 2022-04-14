@@ -28,6 +28,7 @@ import sys
 
 import requests
 import yaml
+import backoff
 
 #pylint: disable=wrong-import-position
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -258,6 +259,8 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
         raise UnknownError("Unknown response from registry")
 
 
+# backoff retry
+@backoff.on_exception(backoff.expo, requests.exceptions.ConnectTimeout, max_tries=3)
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("job_config", help="job config yaml")
