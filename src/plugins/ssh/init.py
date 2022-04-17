@@ -59,12 +59,11 @@ def prepare_job_ssh_key_pair(user_extension):
 
     Format of user extension:
     {
-        "jobSSH": [
+        "jobSSH":
             {
                 "key": "-----BEGIN RSA PRIVATE KEY----- xxxx",
                 "pubKey": "ssh-rsa xxxx"
             }
-        ]
     }
     """
     if "jobSSH" in user_extension:
