@@ -109,7 +109,7 @@ if [[ ! -z "$LOG_FILES" ]]; then
 fi
 
 # Clean ${PAI_WORK_DIR} since it may contain last execution content. (rarely happen, but seen in real world)
-find ${PAI_WORK_DIR} -maxdepth 1 -mindepth 1 ! -name "logs" -exec rm -rf {} \;
+find ${PAI_WORK_DIR} -maxdepth 1 -mindepth 1 ! -name "logs" ! -name "user-extension-secrets" -exec rm -rf {} \;
 
 
 # Move all runtime sources to PAI_WORK_DIR

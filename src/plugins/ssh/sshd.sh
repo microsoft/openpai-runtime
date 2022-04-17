@@ -47,8 +47,7 @@ function prepare_ssh()
 
 function prepare_job_ssh()
 {
-  # Job ssh files are mounted to /usr/local/pai/ssh-secret.
-  # Please refer to https://kubernetes.io/docs/concepts/configuration/secret/#use-case-pod-with-ssh-keys
+  # A pair of separate job ssh for each user got from user_extension
   localPublicKeyPath=${PAI_WORK_DIR}/ssh-secret/ssh-publickey
   localPrivateKeyPath=${PAI_WORK_DIR}/ssh-secret/ssh-privatekey
 
