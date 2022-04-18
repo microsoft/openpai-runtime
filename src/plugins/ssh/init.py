@@ -69,9 +69,9 @@ def prepare_job_ssh_key_pair(user_extension):
     if "jobSSH" in user_extension:
         secret_root = './ssh-secret'
         Path(secret_root).mkdir(exist_ok=True)
-        with open("./ssh-secret/ssh-publickey", "w") as publickey:
+        with open(os.path.join(secret_root, "ssh-publickey"), "w") as publickey:
             publickey.write(user_extension["jobSSH"]["pubKey"])
-        with open("./ssh-secret/ssh-privatekey", "w") as privatekey:
+        with open(os.path.join(secret_root, "ssh-privatekey"), "w") as privatekey:
             privatekey.write(user_extension["jobSSH"]["key"])
 
 
