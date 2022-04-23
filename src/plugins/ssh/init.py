@@ -18,6 +18,7 @@
 
 import logging
 import os
+from pathlib import Path
 import sys
 
 sys.path.append(
@@ -52,12 +53,36 @@ def get_user_public_keys(user_extension):
     return public_keys
 
 
+def prepare_job_ssh_key_pair(user_extension):
+    """
+    prepare job ssh key pair from user extension
+
+    Format of user extension:
+    {
+        "jobSSH":
+            {
+                "key": "-----BEGIN RSA PRIVATE KEY----- xxxx",
+                "pubKey": "ssh-rsa xxxx"
+            }
+    }
+    """
+    if "jobSSH" in user_extension:
+        secret_root = './ssh-secret'
+        Path(secret_root).mkdir(exist_ok=True)
+        with open(os.path.join(secret_root, "ssh-publickey"), "w") as publickey:
+            publickey.write(user_extension["jobSSH"]["pubKey"])
+        with open(os.path.join(secret_root, "ssh-privatekey"), "w") as privatekey:
+            privatekey.write(user_extension["jobSSH"]["key"])
+
+
 def main():
     LOGGER.info("Preparing ssh runtime plugin commands")
     [plugin_config, pre_script, _] = plugin_init()
     plugin_helper = PluginHelper(plugin_config)
     parameters = plugin_config.get("parameters")
     user_extension = plugin_config.get("user_extension")
+
+    prepare_job_ssh_key_pair(user_extension)
 
     if not parameters:
         LOGGER.info("Ssh plugin parameters is empty, ignore this")
