@@ -257,6 +257,10 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                        resp.status_code)
         raise UnknownError("Unknown response from registry")
 
+    def pull_image(self):
+        LOGGER.info(f"pulling image {self._image_uri}")
+        os.system(f'docker pull {self._image_uri}')
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -281,6 +285,7 @@ def main():
             sys.exit(1)
     except Exception:  #pylint: disable=broad-except
         LOGGER.warning("Failed to check image", exc_info=True)
+    image_checker.pull_image()
 
 
 if __name__ == "__main__":
