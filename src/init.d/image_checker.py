@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import sys
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -256,6 +257,13 @@ class ImageChecker():  #pylint: disable=too-few-public-methods
                        resp.status_code)
         raise UnknownError("Unknown response from registry")
 
+    # workaround for microsfot policy
+    def is_using_valid_registry(self) ->bool:
+        url = urlparse(self._registry_uri)
+        if url.netloc.endswith("azurecr.io") or url.netloc == "mcr.microsoft.com":
+            return True
+        return False
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -275,6 +283,9 @@ def main():
 
     LOGGER.info("Start checking docker image")
     image_checker = ImageChecker(job_config, job_secret)
+    if not image_checker.is_using_valid_registry():
+        LOGGER.error("Only support Microsoft hosted registries: ACR and MCR ")
+        sys.exit(255)
     try:
         if not image_checker.is_docker_image_accessible():
             sys.exit(1)
